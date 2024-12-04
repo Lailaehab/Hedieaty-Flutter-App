@@ -1,9 +1,44 @@
 import 'package:flutter/material.dart';
 import 'create_event.dart';
 import '/controllers/authentication_controller.dart';
+import 'my_event_list.dart';
+import 'my_pledged_gifts.dart';
+import 'profile_page.dart';
+import '/reusable/nav_bar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  final AuthController authController = AuthController();
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    HomePageContent(),
+    MyEventListPage(),
+    MyPledgedGiftsPage(),
+    ProfilePage(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: MainNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+    );
+  }
+}
+
+class HomePageContent extends StatelessWidget {
   final AuthController authController = AuthController();
 
   @override
@@ -25,17 +60,15 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.person_add),
             onPressed: () {
-              // Add friend functionality
               _showAddFriendDialog(context);
             },
           ),
-           IconButton( 
+          IconButton(
             onPressed: () async {
-              // Call logOut method
               await authController.logOut();
-              // Optionally, navigate to the login page or show a message
-              Navigator.of(context).pushReplacementNamed('/signup');}, 
-            icon: const Icon(Icons.logout), 
+              Navigator.of(context).pushReplacementNamed('/signup');
+            },
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
@@ -142,7 +175,6 @@ class HomePage extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Save friend logic
                 Navigator.pop(context);
               },
               child: Text('Add'),
