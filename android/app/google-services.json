@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "809714617948",
+    "project_id": "hedieaty-d79be",
+    "storage_bucket": "hedieaty-d79be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:809714617948:android:449801317741f213606099",
+        "android_client_info": {
+          "package_name": "com.example.h"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHK02nBB6cRHZ1-XkLr60F8MdS3lzwD2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:809714617948:android:c764e895ba63a000606099",
+        "android_client_info": {
+          "package_name": "com.example.hedieaty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHK02nBB6cRHZ1-XkLr60F8MdS3lzwD2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

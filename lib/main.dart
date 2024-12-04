@@ -8,9 +8,23 @@ import 'friend_gift_list.dart';
 import 'profile_page.dart';
 import 'create_event.dart';
 import 'my_pledged_gifts.dart';
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'signup.dart';
 
-void main() {
+void main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+   await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+);
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  await messaging.requestPermission();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(HedieatyApp());
+}
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('Handling a background message: ${message.messageId}');
 }
 
 class HedieatyApp extends StatelessWidget {
@@ -22,9 +36,10 @@ class HedieatyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      // initialRoute: '/',
+      initialRoute: '/signup',
       routes: {
-        // '/': (context) => HomePage(),
+        '/signup': (context) => SignUpScreen(),
+        '/home': (context) => HomePage(),
         '/myEvents': (context) => MyEventListPage(),
         '/friendEvents': (context) => FriendEventListPage(),
         '/myGifts': (context) => MyGiftListPage(),
@@ -34,7 +49,6 @@ class HedieatyApp extends StatelessWidget {
         '/profile': (context) => ProfilePage(),
         '/createEvent': (context) => CreateEvent(),
       },
-      home: MainNavigationPage(),
     );
   }
 }

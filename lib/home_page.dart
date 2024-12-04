@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'create_event.dart';
+import '/controllers/authentication_controller.dart';
 
 class HomePage extends StatelessWidget {
+
+  final AuthController authController = AuthController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +28,14 @@ class HomePage extends StatelessWidget {
               // Add friend functionality
               _showAddFriendDialog(context);
             },
+          ),
+           IconButton( 
+            onPressed: () async {
+              // Call logOut method
+              await authController.logOut();
+              // Optionally, navigate to the login page or show a message
+              Navigator.of(context).pushReplacementNamed('/signup');}, 
+            icon: const Icon(Icons.logout), 
           ),
         ],
       ),
