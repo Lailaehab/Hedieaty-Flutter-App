@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import '../controllers/event_controller.dart';
 import '../models/event.dart';
+import '../controllers/authentication_controller.dart';
 
 class MyEventListPage extends StatelessWidget {
   final EventController _eventController = EventController();
+  final AuthController _authController = AuthController();
 
   @override
   Widget build(BuildContext context) {
+    // Get the logged-in user's ID
+    final user = _authController.getCurrentUser();
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My Events')),
+        body: const Center(child: Text('User not logged in')),
+      );
+    }
+    final userId = user.uid;
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Events')),
       body: StreamBuilder<List<Event>>(
-        stream: _eventController.getEvents(),
+        stream: _eventController.getEventsForUser(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

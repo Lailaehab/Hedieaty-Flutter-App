@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Event {
   final String eventId;
+  final String userId; 
   final String name;
   final String category;
   final String status;
@@ -11,6 +12,7 @@ class Event {
 
   Event({
     required this.eventId,
+    required this.userId,
     required this.name,
     required this.category,
     required this.status,
@@ -22,6 +24,7 @@ class Event {
   factory Event.fromFirestore(String eventId, Map<String, dynamic> data) {
     return Event(
       eventId: eventId,
+      userId: data['userId'], // Parse userId
       name: data['name'],
       category: data['category'],
       status: data['status'],
@@ -33,6 +36,7 @@ class Event {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'userId': userId, // Include userId
       'name': name,
       'category': category,
       'status': status,

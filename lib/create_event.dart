@@ -3,9 +3,11 @@ import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../controllers/event_controller.dart';
 import '../models/event.dart';
+import '../controllers/authentication_controller.dart';
 
 class CreateEvent extends StatelessWidget {
   final EventController _eventController = EventController();
+  final AuthController _authController = AuthController();
 
   // Controllers for form fields
   final TextEditingController _nameController = TextEditingController();
@@ -62,9 +64,21 @@ class CreateEvent extends StatelessWidget {
                   final dateTime = DateTime.parse('${_dateController.text}T${_timeController.text}');
                   final timestamp = Timestamp.fromDate(dateTime);
 
+                  // Get the logged-in user's ID
+                  final user = _authController.getCurrentUser();
+                  if (user == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User not logged in')),
+                    );
+                    return;
+                  }
+
+                  final userId = user.uid;
+
                   // Create a new Event
                   final event = Event(
                     eventId: const Uuid().v4(),
+                    userId: userId,
                     name: _nameController.text,
                     category: _categoryController.text,
                     status: 'Upcoming', // Default status
@@ -74,7 +88,7 @@ class CreateEvent extends StatelessWidget {
                   );
 
                   // Save the event using the controller
-                  await _eventController.saveEvent(event);
+                  await _eventController.saveEventForUser(userId, event);
 
                   // Notify user and go back
                   ScaffoldMessenger.of(context).showSnackBar(
