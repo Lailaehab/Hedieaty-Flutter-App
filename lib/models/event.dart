@@ -24,7 +24,7 @@ class Event {
   factory Event.fromFirestore(String eventId, Map<String, dynamic> data) {
     return Event(
       eventId: eventId,
-      userId: data['userId'], // Parse userId
+      userId: data['userId'], 
       name: data['name'],
       category: data['category'],
       status: data['status'],
@@ -36,7 +36,7 @@ class Event {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId, // Include userId
+      'userId': userId, 
       'name': name,
       'category': category,
       'status': status,

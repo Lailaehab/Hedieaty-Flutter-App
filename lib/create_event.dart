@@ -88,7 +88,7 @@ class CreateEvent extends StatelessWidget {
                   );
 
                   // Save the event using the controller
-                  await _eventController.saveEventForUser(userId, event);
+                  await _eventController.saveEvent( event);
 
                   // Notify user and go back
                   ScaffoldMessenger.of(context).showSnackBar(

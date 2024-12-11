@@ -12,6 +12,7 @@ import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'signup.dart';
+import 'add_gift.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -37,18 +38,59 @@ class HedieatyApp extends StatelessWidget {
         primarySwatch: Colors.teal,
       ),
       initialRoute: '/signup',
-      routes: {
-        '/signup': (context) => SignUpScreen(),
-        '/home': (context) => HomePage(),
-        '/myEvents': (context) => MyEventListPage(),
-        '/friendEvents': (context) => FriendEventListPage(),
-        '/myGifts': (context) => MyGiftListPage(),
-        '/friendGifts': (context) => FriendGiftListPage(),
-        '/myGiftDetails': (context) => MyGiftDetailsPage(),
-        '/pledgedGifts': (context) => MyPledgedGiftsPage(),
-        '/profile': (context) => ProfilePage(),
-        '/createEvent': (context) => CreateEvent(),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/myGifts':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => MyGiftListPage(eventId: args['eventId']),
+            );
+          case '/myGiftDetails':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => MyGiftDetailsPage(giftId: args['giftId']),
+            );
+          case '/addGift':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => AddGiftPage(eventId: args['eventId']),
+            );
+          case'/signup': return MaterialPageRoute(
+              builder: (context) => SignUpScreen(),);
+          case'/home': return MaterialPageRoute(
+                builder: (context) => HomePage(),);
+          case'/myEvents':return MaterialPageRoute(
+                builder: (context) => MyEventListPage(),);
+          case'/friendEvents':final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => FriendEventListPage(friendId: args['friendId']),);
+          case'/friendGifts': final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => FriendGiftListPage(eventId: args['eventId']),
+            );
+          case'/pledgedGifts': return MaterialPageRoute(
+                builder:(context) => MyPledgedGiftsPage(),);
+          case'/profile': return MaterialPageRoute(
+                builder:(context) => ProfilePage(),);
+          case'/createEvent': return MaterialPageRoute(
+                builder:(context) => CreateEvent(),);
+          default:
+            return null;
+        }
       },
+
+      // routes: {
+      //   '/signup': (context) => SignUpScreen(),
+      //   '/home': (context) => HomePage(),
+      //   '/myEvents': (context) => MyEventListPage(),
+      //   '/friendEvents': (context) => FriendEventListPage(),
+      //   '/myGifts': (context) => MyGiftListPage(),
+      //   '/friendGifts': (context) => FriendGiftListPage(),
+      //   '/myGiftDetails': (context) => MyGiftDetailsPage(),
+      //   '/pledgedGifts': (context) => MyPledgedGiftsPage(),
+      //   '/profile': (context) => ProfilePage(),
+      //   '/createEvent': (context) => CreateEvent(),
+      // },
     );
   }
 }

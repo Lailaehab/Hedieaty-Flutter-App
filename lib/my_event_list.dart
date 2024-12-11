@@ -52,10 +52,24 @@ class MyEventListPage extends StatelessWidget {
                     'Date: ${event.date.toDate().toString().split(' ')[0]}\n'
                     'Location: ${event.location}',
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.card_giftcard_rounded,
+                        size: 30.0, // Set the desired size
+                        color: Colors.green, // Set the desired color
+                      ),
+                      SizedBox(width: 8.0), // Spacing between icon and text
+                      Text(
+                        'View Gifts',
+                        style: TextStyle(color: Colors.green), // Match text color with icon
+                      ),
+                    ],
+                  ),
                   onTap: () {
                     // Handle navigation to event details or gift list
-                    Navigator.pushNamed(context, '/myGifts');
+                    Navigator.pushNamed(context, '/myGifts',arguments: {'eventId': event.eventId},);
                   },
                 ),
               );
