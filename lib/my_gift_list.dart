@@ -1,20 +1,47 @@
 import 'package:flutter/material.dart';
 import '/controllers/gift_controller.dart';
 import '/models/gift.dart';
+import 'reusable/sorting_utils.dart';
 
-class MyGiftListPage extends StatelessWidget {
+class MyGiftListPage extends StatefulWidget {
   final String eventId;
 
   const MyGiftListPage({required this.eventId, Key? key}) : super(key: key);
+
+  @override
+  _MyGiftListPageState createState() => _MyGiftListPageState();
+}
+
+class _MyGiftListPageState extends State<MyGiftListPage> {
+  SortOption _sortOption = SortOption.name; // Default sort by name
+  bool _ascending = true; // Default sorting order: ascending
 
   @override
   Widget build(BuildContext context) {
     final GiftController giftController = GiftController();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Gifts for Event')),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: giftController.getGiftsForEvent(eventId),
+      appBar: AppBar(
+        title: Text('Gifts for Event'),
+        actions: [
+          SortingUtils.buildSortMenu(
+            sortOption: _sortOption,
+            ascending: _ascending,
+            onSortOptionChanged: (SortOption newSortOption) {
+              setState(() {
+                _sortOption = newSortOption;
+              });
+            },
+            onSortOrderChanged: (bool newAscending) {
+              setState(() {
+                _ascending = newAscending;
+              });
+            },
+          ),
+        ],
+      ),
+      body: StreamBuilder<List<Map<String, dynamic>>>( 
+        stream: giftController.getGiftsForEvent(widget.eventId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -27,10 +54,19 @@ class MyGiftListPage extends StatelessWidget {
           }
 
           final gifts = snapshot.data!;
+          final sortedGifts = SortingUtils.sortItems(
+            items: gifts,
+            sortOption: _sortOption,
+            ascending: _ascending,
+            getName: (gift) => gift['name'],
+            getCategory: (gift) => gift['category'],
+            getStatus: (gift) => gift['status'],
+          );
+
           return ListView.builder(
-            itemCount: gifts.length,
+            itemCount: sortedGifts.length,
             itemBuilder: (context, index) {
-              final gift = Gift.fromFirestore(gifts[index]['id'], gifts[index]);
+              final gift = Gift.fromFirestore(sortedGifts[index]['id'], sortedGifts[index]);
               return Card(
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
@@ -72,7 +108,7 @@ class MyGiftListPage extends StatelessWidget {
           Navigator.pushNamed(
             context,
             '/addGift',
-            arguments: {'eventId': eventId},
+            arguments: {'eventId': widget.eventId},
           );
         },
         child: Icon(Icons.add),

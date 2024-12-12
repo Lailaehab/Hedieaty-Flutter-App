@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Event {
-  final String eventId;
-  final String userId; 
-  final String name;
-  final String category;
-  final String status;
-  final String location;
-  final Timestamp date;
-  final List<String> giftIds;
+   String eventId;
+   String userId; 
+   String name;
+   String category;
+   String status;
+   String location;
+   Timestamp date;
+   List<String> giftIds;
 
   Event({
     required this.eventId,

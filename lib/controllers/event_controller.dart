@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/models/event.dart';
+import 'package:intl/intl.dart';
 
 class EventController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -45,5 +46,40 @@ class EventController {
       print('Error deleting event: $e');
     }
   }
-}
 
+  // Get the status of an event
+  // String getEventStatus(Timestamp eventDate) {
+  //   final DateTime eventDateTime = eventDate.toDate();
+  //   final DateTime now = DateTime.now();
+  //   if (eventDateTime.isBefore(now) && eventDateTime.day != now.day) {
+  //     return 'Past';
+  //   } else if (eventDateTime.isAtSameMomentAs(DateTime(now.year, now.month, now.day))) {
+  //     return 'Current';
+  //   } else if (eventDateTime.isAfter(now)) {
+  //     return 'Upcoming';
+  //   }
+  //   return 'Unknown';
+  // }
+    String getEventStatus(Timestamp eventDate) {
+    final DateTime eventDateTime = eventDate.toDate();
+    final DateTime now = DateTime.now();
+
+    // Extract date parts for comparison
+    final DateTime eventDateOnly = DateTime(eventDateTime.year, eventDateTime.month, eventDateTime.day);
+    final DateTime nowDateOnly = DateTime(now.year, now.month, now.day);
+
+    if (eventDateOnly.isBefore(nowDateOnly)) {
+      return 'Past';
+    } else if (eventDateOnly.isAtSameMomentAs(nowDateOnly)) {
+      return 'Current';
+    } else if (eventDateOnly.isAfter(nowDateOnly)) {
+      return 'Upcoming';
+    }
+    return 'Unknown';
+  }
+
+    String formatEventTime(Timestamp eventDate) {
+    final eventDateTime = eventDate.toDate();
+    return DateFormat('HH:mm').format(eventDateTime);
+  }
+}

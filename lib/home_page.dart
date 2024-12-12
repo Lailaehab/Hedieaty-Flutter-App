@@ -11,6 +11,7 @@ import '/reusable/nav_bar.dart';
 import 'friend_event_list.dart';
 import '/models/user.dart';
 import '/models/event.dart';
+import 'reusable/search.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -18,8 +19,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final AuthController authController = AuthController();
-  final UserController userController = UserController();
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
@@ -45,9 +44,17 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class HomePageContent extends StatelessWidget {
+class HomePageContent extends StatefulWidget {
+  @override
+  _HomePageContentState createState() => _HomePageContentState();
+}
+
+class _HomePageContentState extends State<HomePageContent> {
   final AuthController authController = AuthController();
   final UserController userController = UserController();
+  final FriendSearchController friendSearchController = FriendSearchController();
+
+  String searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +108,7 @@ class HomePageContent extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => CreateEvent()),
                 );
               },
-              icon: Icon(Icons.add),
+              icon: Icon(Icons.add,color: Colors.white,size:30),
               label: Text(
                 'Create Your Own Event',
                 style: TextStyle(
@@ -130,7 +137,9 @@ class HomePageContent extends StatelessWidget {
                 ),
               ),
               onChanged: (value) {
-                // Search logic here
+                setState(() {
+                  searchQuery = value;
+                });
               },
             ),
           ),
@@ -160,11 +169,8 @@ class HomePageContent extends StatelessWidget {
                 if (friends.isEmpty) {
                   return Center(child: Text('You have no friends.'));
                 }
-                return StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .where(FieldPath.documentId, whereIn: friends)
-                      .snapshots(),
+                return StreamBuilder<List<QueryDocumentSnapshot>>(
+                  stream: friendSearchController.searchFriendsByName(friends, searchQuery),
                   builder: (context, friendsSnapshot) {
                     if (friendsSnapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
@@ -174,11 +180,11 @@ class HomePageContent extends StatelessWidget {
                       return Center(child: Text('Error: ${friendsSnapshot.error}'));
                     }
 
-                    if (!friendsSnapshot.hasData || friendsSnapshot.data!.docs.isEmpty) {
+                    if (friendsSnapshot.data == null || friendsSnapshot.data!.isEmpty) {
                       return Center(child: Text('No Friends Found'));
                     }
 
-                    var friendDocs = friendsSnapshot.data!.docs;
+                    var friendDocs = friendsSnapshot.data!;
 
                     return ListView.builder(
                       itemCount: friendDocs.length,
@@ -199,7 +205,7 @@ class HomePageContent extends StatelessWidget {
                               return Center(child: Text('Error: ${eventSnapshot.error}'));
                             }
 
-                            var upcomingEvents = eventSnapshot.data;
+                            var upcomingEvents = eventSnapshot.data?.where((event) => event.status == 'Upcoming').toList();
 
                             return ListTile(
                               title: Text(friendName),

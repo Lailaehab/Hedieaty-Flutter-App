@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../controllers/event_controller.dart';
 import '../models/event.dart';
-import '../controllers/authentication_controller.dart';
+import '../controllers/event_controller.dart';
 
-class CreateEvent extends StatelessWidget {
+class EditEvent extends StatelessWidget {
+  final Event event;
   final EventController _eventController = EventController();
-  final AuthController _authController = AuthController();
 
-  // Controllers for form fields
+  EditEvent({required this.event});
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
@@ -18,8 +17,15 @@ class CreateEvent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pre-fill the form fields
+    _nameController.text = event.name;
+    _categoryController.text = event.category;
+    _locationController.text = event.location;
+    _dateController.text = event.date.toDate().toString().split(' ')[0];
+    _timeController.text = event.date.toDate().toString().split(' ')[1].substring(0, 5);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Event')),
+      appBar: AppBar(title: const Text('Edit Event')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -48,7 +54,6 @@ class CreateEvent extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  // Validate inputs
                   if (_nameController.text.isEmpty ||
                       _categoryController.text.isEmpty ||
                       _locationController.text.isEmpty ||
@@ -64,40 +69,25 @@ class CreateEvent extends StatelessWidget {
                   final dateTime = DateTime.parse('${_dateController.text}T${_timeController.text}');
                   final timestamp = Timestamp.fromDate(dateTime);
 
-                  // Get the logged-in user's ID
-                  final user = _authController.getCurrentUser();
-                  if (user == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('User not logged in')),
-                    );
-                    return;
-                  }
-
-                  final userId = user.uid;
-
-                  // Create a new Event
-                  final event = Event(
-                    eventId: const Uuid().v4(),
-                    userId: userId,
+                  final updatedEvent = Event(
+                    eventId: event.eventId,
+                    userId: event.userId,
                     name: _nameController.text,
                     category: _categoryController.text,
-                    status: 'Upcoming', // Default status
+                    status: event.status,
                     location: _locationController.text,
                     date: timestamp,
-                    giftIds: [], // No gifts initially
+                    giftIds: event.giftIds,
                   );
 
-                  event.status=_eventController.getEventStatus(event.date);
-                  // Save the event using the controller
-                  await _eventController.saveEvent( event);
-
-                  // Notify user and go back
+                  updatedEvent.status=_eventController.getEventStatus(updatedEvent.date);
+                  await _eventController.saveEvent(updatedEvent);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Event created successfully')),
+                    const SnackBar(content: Text('Event updated successfully')),
                   );
                   Navigator.pop(context);
                 },
-                child: const Text('Create Event'),
+                child: const Text('Save Changes'),
               ),
             ],
           ),

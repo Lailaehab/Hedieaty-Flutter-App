@@ -3,26 +3,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '/models/user.dart';
 
 class UserController {
-  Stream<List<Map<String, dynamic>>> getUserEvents(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('events')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-  }
+  // Stream<List<Map<String, dynamic>>> getUserEvents(String userId) {
+  //   return _firestore
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('events')
+  //       .snapshots()
+  //       .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  // }
 
-  // Stream for real-time updates of event's gifts
-  Stream<List<Map<String, dynamic>>> getEventGifts(String userId, String eventId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('events')
-        .doc(eventId)
-        .collection('gifts')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-  }
+  // // Stream for real-time updates of event's gifts
+  // Stream<List<Map<String, dynamic>>> getEventGifts(String userId, String eventId) {
+  //   return _firestore
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('events')
+  //       .doc(eventId)
+  //       .collection('gifts')
+  //       .snapshots()
+  //       .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  // }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Add User to Firestore
@@ -74,7 +74,7 @@ class UserController {
         'friends': FieldValue.arrayUnion([friendId]),
       });
 
-      // Optionally, add the current user to the friend's friend list
+      // add the current user to the friend's friend list
       DocumentReference friendRef = _firestore.collection('users').doc(friendId);
       await friendRef.update({
         'friends': FieldValue.arrayUnion([userId]),

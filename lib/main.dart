@@ -13,6 +13,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'signup.dart';
 import 'add_gift.dart';
+import 'edit_event.dart';
+import 'models/event.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -74,6 +76,11 @@ class HedieatyApp extends StatelessWidget {
                 builder:(context) => ProfilePage(),);
           case'/createEvent': return MaterialPageRoute(
                 builder:(context) => CreateEvent(),);
+          case '/editEvent':final args = settings.arguments as Map<String, dynamic>;
+          final event = args['event'] as Event;
+          return MaterialPageRoute(
+            builder: (context) => EditEvent(event: event),
+          );
           default:
             return null;
         }
