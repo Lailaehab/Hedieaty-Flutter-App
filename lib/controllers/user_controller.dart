@@ -1,29 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '/models/user.dart';
+import 'gift_controller.dart';
 
 class UserController {
-  // Stream<List<Map<String, dynamic>>> getUserEvents(String userId) {
-  //   return _firestore
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('events')
-  //       .snapshots()
-  //       .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-  // }
-
-  // // Stream for real-time updates of event's gifts
-  // Stream<List<Map<String, dynamic>>> getEventGifts(String userId, String eventId) {
-  //   return _firestore
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('events')
-  //       .doc(eventId)
-  //       .collection('gifts')
-  //       .snapshots()
-  //       .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-  // }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GiftController _giftController = GiftController();
 
   // Add User to Firestore
   Future<void> addUser(String userId, Map<String, dynamic> userData) async {
@@ -47,6 +29,32 @@ class UserController {
   // Delete User
   Future<void> deleteUser(String userId) async {
     await _firestore.collection('users').doc(userId).delete();
+  }
+
+   // Fetch pledged gifts for a user
+  Future<List<Map<String, dynamic>>> getPledgedGifts(String userId) async {
+    final userSnapshot = await _firestore.collection('users').doc(userId).get();
+    final pledgedGiftIds = List<String>.from(userSnapshot.data()?['pledgedGifts'] ?? []);
+
+    final pledgedGifts = <Map<String, dynamic>>[];
+    for (var giftId in pledgedGiftIds) {
+      final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+      final giftData = giftSnapshot.data()!;
+      // Fetch the owner of the gift (Friend field in the previous code)
+      final giftOwnerName = await _giftController.getGiftOwner(giftId);
+
+      pledgedGifts.add({
+        'id': giftId,
+        'giftName': giftData['name'],
+        'Friend': giftOwnerName, // Friend is now the gift owner name
+        'category': giftData['category'],
+        'price': giftData['price'],
+        'description': giftData['description'],
+        'image': giftData['imageUrl'], 
+        'ownerId':giftData['ownerId'] ,// Assuming image URL is stored
+      });
+    }
+    return pledgedGifts;
   }
 
   Future<String> addFriendByPhoneNumber(String userId, String phoneNumber) async {

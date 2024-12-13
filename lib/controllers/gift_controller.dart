@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty/models/gift.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GiftController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -44,27 +45,94 @@ Stream<List<Map<String, dynamic>>> getGiftsForEvent(String eventId) {
     await _firestore.collection('gifts').doc(giftId).delete();
   }
 
-  // Pledge a gift
-  Future<void> pledgeGift(String giftId, String pledgedBy) async {
-    await _firestore.collection('gifts').doc(giftId).update({
-      'status': 'pledged',
-      'pledgedBy': pledgedBy,
-    });
-    _sendNotification(pledgedBy, giftId);
-  }
-
-  // Send a notification to the gift owner
-  Future<void> _sendNotification(String pledgedBy, String giftId) async {
+  Future<String> getGiftOwner(String giftId) async {
     final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
-    final eventSnapshot = await _firestore
-        .collection('events')
-        .doc(giftSnapshot.data()!['eventId'])
-        .get();
+    final giftData = giftSnapshot.data()!;
+    final eventId = giftData['eventId'];
 
-    final eventName = eventSnapshot.data()!['name'];
+    // Fetch event data to get the event owner's ID (Alex in the example)
+    final eventSnapshot = await _firestore.collection('events').doc(eventId).get();
+    final eventOwnerId = eventSnapshot.data()?['userId']; // Assuming the event has a userId field
+    final eventOwnerSnapshot = await _firestore.collection('users').doc(eventOwnerId).get();
+    final eventOwnerName = eventOwnerSnapshot.data()?['name'] ?? 'Event Owner';
+    return eventOwnerName;
+    }
+  // Pledge a gift
+Future<void> pledgeGift(String giftId, String pledgedBy) async {
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final currentUserId = auth.currentUser?.uid;
 
-    // Assume a Firebase Messaging Service is integrated
-    print(
-        'Notification: $pledgedBy pledged a gift for the event "$eventName".');
+  if (currentUserId == null) {
+    print('No user logged in.');
+    return;
   }
+
+  final currentUserSnapshot = await _firestore.collection('users').doc(currentUserId).get();
+  final currentUserName = currentUserSnapshot.data()?['name'] ?? 'Unknown User';
+
+  final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+  final giftData = giftSnapshot.data()!;
+  final eventId = giftData['eventId'];
+
+  final eventSnapshot = await _firestore.collection('events').doc(eventId).get();
+  final eventOwnerId = eventSnapshot.data()?['userId']; 
+  final eventOwnerSnapshot = await _firestore.collection('users').doc(eventOwnerId).get();
+  final eventOwnerName = eventOwnerSnapshot.data()?['name'] ?? 'Event Owner';
+
+  await _firestore.collection('gifts').doc(giftId).update({
+    'status': 'pledged',
+    'pledgedBy': currentUserId,
+  });
+
+  final userRef = _firestore.collection('users').doc(currentUserId);
+  await userRef.update({
+    'pledgedGifts': FieldValue.arrayUnion([giftId]),
+  });
+  _sendNotification(eventOwnerName, currentUserName, giftData['name'], eventSnapshot.data()?['name']);
+}
+
+Future<void> _sendNotification(String eventOwnerName, String pledgedByName, String giftName, String eventName) async {
+  print('$pledgedByName pledged "$giftName" for the event "$eventName". Notification sent to $eventOwnerName.');
+  
+  // You can integrate Firebase Messaging or another notification service here
+}
+
+  Future<void> unpledgeGift(String giftId, String userId) async {
+    final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+    if (!giftSnapshot.exists) {
+      print("Gift does not exist.");
+      return;
+    }
+
+    await _firestore.collection('gifts').doc(giftId).update({
+      'status': 'available',
+      'pledgedBy': FieldValue.delete(),
+    });
+
+    final userRef = _firestore.collection('users').doc(userId);
+    await userRef.update({
+      'pledgedGifts': FieldValue.arrayRemove([giftId]),
+    });
+
+    print("Gift unpledged successfully.");
+  }
+
+  Future<DateTime?> getGiftDueDate(String giftId) async {
+  final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+  final giftData = giftSnapshot.data();
+  
+  if (giftData == null) {
+    return null;
+  }
+
+  final eventId = giftData['eventId'];
+  final eventSnapshot = await _firestore.collection('events').doc(eventId).get();
+  final eventData = eventSnapshot.data();
+  
+  if (eventData == null) {
+    return null;
+  }
+  
+  return (eventData['date'] as Timestamp).toDate();
+}
 }

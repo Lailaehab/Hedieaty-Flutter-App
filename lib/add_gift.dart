@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/gift.dart';
 import '../controllers/gift_controller.dart';
+import 'controllers/authentication_controller.dart';
 import 'package:uuid/uuid.dart';
 
 class AddGiftPage extends StatelessWidget {
@@ -11,6 +12,15 @@ class AddGiftPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final GiftController giftController = GiftController();
+    final AuthController _authController = AuthController();
+    final user = _authController.getCurrentUser();
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My Events')),
+        body: const Center(child: Text('User not logged in')),
+      );
+    }
+    final userId = user.uid;
 
     final TextEditingController nameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
@@ -37,6 +47,7 @@ class AddGiftPage extends StatelessWidget {
                   category: categoryController.text,
                   price: double.parse(priceController.text),
                   status: 'available',
+                  ownerId: userId,
                 );
                 giftController.createGift(newGift);
                 Navigator.pop(context);

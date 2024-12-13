@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Gift {
-  final String giftId;
-  final String eventId; // ID of the event this gift belongs to
-  final String name;
-  final String description;
-  final String category;
-  final double price;
-  final String status; // e.g., "available", "pledged", "purchased"
-  final String? pledgedBy; // User ID of the person who pledged this gift
-  final String? imageUrl;
+  String giftId;
+  String eventId; // ID of the event this gift belongs to
+  String name;
+  String description;
+  String category;
+  double price;
+  String status; // "available", "pledged"
+  String? pledgedBy; // User ID of the person who pledged this gift
+  String? imageUrl;
+  String ownerId;
 
   Gift({
     required this.giftId,
@@ -19,6 +20,7 @@ class Gift {
     required this.category,
     required this.price,
     required this.status,
+    required this.ownerId,
     this.pledgedBy,
     this.imageUrl,
   });
@@ -34,6 +36,7 @@ class Gift {
       status: data['status'],
       pledgedBy: data['pledgedBy'],
       imageUrl: data['imageUrl'],
+      ownerId: data['ownerId']
     );
   }
 
@@ -47,6 +50,7 @@ class Gift {
       'status': status,
       'pledgedBy': pledgedBy,
       'imageUrl': imageUrl,
+      'ownerId':ownerId,
     };
   }
 }

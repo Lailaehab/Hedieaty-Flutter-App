@@ -68,32 +68,100 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
             itemBuilder: (context, index) {
               final gift = Gift.fromFirestore(sortedGifts[index]['id'], sortedGifts[index]);
               return Card(
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(gift.name),
-                  subtitle: Text('Category: ${gift.category}\nStatus: ${gift.status}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (gift.status != 'pledged')
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/myGiftDetails',
-                              arguments: {'giftId': gift.giftId},
-                            );
-                          },
+                      Text(
+                        gift.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          giftController.deleteGift(gift.giftId);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Gift deleted.')),
-                          );
-                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.category, color: Colors.grey[600], size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Category: ${gift.category}',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.monetization_on, color: Colors.grey[600], size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Price: \$${gift.price}',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.description, color: Colors.grey[600], size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Description: ${gift.description}',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.info, color: Colors.grey[600], size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Status: ${gift.status}',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (gift.imageUrl != null)
+                        Image.network(
+                          gift.imageUrl!,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
+                      const Divider(height: 20, color: Colors.grey),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (gift.status != 'pledged')
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/myGiftDetails',
+                                  arguments: {'giftId': gift.giftId},
+                                );
+                              },
+                            ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              giftController.deleteGift(gift.giftId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Gift deleted.')),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
