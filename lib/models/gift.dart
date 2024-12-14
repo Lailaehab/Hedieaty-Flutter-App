@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Gift {
   String giftId;
   String eventId; // ID of the event this gift belongs to

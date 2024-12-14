@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'friend_gift_list.dart';
 import 'models/event.dart';
 import '/controllers/event_controller.dart';
 import '/reusable/sorting_utils.dart';
@@ -53,7 +51,7 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
           }
 
           final events = snapshot.data!
-              .where((event) => widget._eventController.getEventStatus(event.date) == 'Upcoming')
+              .where((event) => widget._eventController.getEventStatus(event.date,event) == 'Upcoming')
               .toList();
 
           if (events.isEmpty) {
@@ -66,14 +64,14 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
             ascending: _ascending,
             getName: (event) => event.name,
             getCategory: (event) => event.category,
-            getStatus: (event) => widget._eventController.getEventStatus(event.date),
+            getStatus: (event) => widget._eventController.getEventStatus(event.date,event),
           );
 
           return ListView.builder(
             itemCount: sortedEvents.length,
             itemBuilder: (context, index) {
               final event = sortedEvents[index];
-              final eventStatus = widget._eventController.getEventStatus(event.date);
+              final eventStatus = widget._eventController.getEventStatus(event.date,event);
               final eventTime = widget._eventController.formatEventTime(event.date);
 
               return Card(
@@ -96,7 +94,6 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Other event details
                       Row(
                         children: [
                           Icon(Icons.category, color: Colors.grey[600], size: 18),

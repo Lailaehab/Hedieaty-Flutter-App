@@ -8,10 +8,10 @@ import 'my_event_list.dart';
 import 'my_pledged_gifts.dart';
 import 'profile_page.dart';
 import '/reusable/nav_bar.dart';
-import 'friend_event_list.dart';
 import '/models/user.dart';
 import '/models/event.dart';
 import 'reusable/search.dart';
+import 'notifications.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
     MyEventListPage(),
     MyPledgedGiftsPage(),
     ProfilePage(),
+    NotificationsPage(),
   ];
 
   @override
@@ -82,7 +83,7 @@ class _HomePageContentState extends State<HomePageContent> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.person_add),
+            icon: Icon(Icons.person_add,size: 32,),
             onPressed: () {
               _showAddFriendDialog(context);
             },
@@ -92,7 +93,7 @@ class _HomePageContentState extends State<HomePageContent> {
               await authController.logOut();
               Navigator.of(context).pushReplacementNamed('/signup');
             },
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout,size: 32,),
           ),
         ],
       ),

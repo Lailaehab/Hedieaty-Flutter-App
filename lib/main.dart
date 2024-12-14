@@ -15,6 +15,7 @@ import 'signup.dart';
 import 'add_gift.dart';
 import 'edit_event.dart';
 import 'models/event.dart';
+import 'login.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,8 @@ class HedieatyApp extends StatelessWidget {
             );
           case'/signup': return MaterialPageRoute(
               builder: (context) => SignUpScreen(),);
+          case'/login': return MaterialPageRoute(
+              builder: (context) => LoginPage(),);
           case'/home': return MaterialPageRoute(
                 builder: (context) => HomePage(),);
           case'/myEvents':return MaterialPageRoute(

@@ -34,6 +34,10 @@ class MainNavigationBar extends StatelessWidget {
           icon: Icon(Icons.person),
           label: 'Profile',
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.notifications_active),
+          label: 'Notifications',
+        ),
       ],
     );
   }

@@ -87,7 +87,7 @@ class CreateEvent extends StatelessWidget {
                     giftIds: [], // No gifts initially
                   );
 
-                  event.status=_eventController.getEventStatus(event.date);
+                  event.status=_eventController.getEventStatus(event.date,event);
                   // Save the event using the controller
                   await _eventController.saveEvent( event);
 

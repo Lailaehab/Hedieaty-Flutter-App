@@ -88,13 +88,14 @@ Future<void> pledgeGift(String giftId, String pledgedBy) async {
   await userRef.update({
     'pledgedGifts': FieldValue.arrayUnion([giftId]),
   });
-  _sendNotification(eventOwnerName, currentUserName, giftData['name'], eventSnapshot.data()?['name']);
-}
-
-Future<void> _sendNotification(String eventOwnerName, String pledgedByName, String giftName, String eventName) async {
-  print('$pledgedByName pledged "$giftName" for the event "$eventName". Notification sent to $eventOwnerName.');
-  
-  // You can integrate Firebase Messaging or another notification service here
+  // Add notification for the gift list creator
+  await _firestore.collection('notifications').add({
+    'userId': eventOwnerId,
+    'title': 'Gift Pledged',
+    'message': '$currentUserName pledged to buy "${giftData['name']}" for your event.',
+    'timestamp': FieldValue.serverTimestamp(),
+    'read': false,
+  });
 }
 
   Future<void> unpledgeGift(String giftId, String userId) async {
@@ -135,4 +136,10 @@ Future<void> _sendNotification(String eventOwnerName, String pledgedByName, Stri
   
   return (eventData['date'] as Timestamp).toDate();
 }
+
+Future<void> updateGiftImageUrl(String giftId, String imageUrl) async {
+    await _firestore.collection('gifts').doc(giftId).update({
+      'imageUrl': imageUrl,
+    });
+  }
 }

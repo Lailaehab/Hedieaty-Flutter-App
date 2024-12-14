@@ -16,7 +16,6 @@ class FriendGiftListPage extends StatefulWidget {
 class _FriendGiftListPageState extends State<FriendGiftListPage> {
   SortOption _sortOption = SortOption.name; // Default sort by name
   bool _ascending = true; // Default sorting order: ascending
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +23,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gifts for Event'),
+        title: const Text('Gifts for Event'),
         actions: [
           SortingUtils.buildSortMenu(
             sortOption: _sortOption,
@@ -42,17 +41,17 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
           ),
         ],
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(  
+      body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: giftController.getGiftsForEvent(widget.eventId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No gifts found for this event.'));
+            return const Center(child: Text('No gifts found for this event.'));
           }
 
           final gifts = snapshot.data!;
@@ -68,7 +67,10 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
           return ListView.builder(
             itemCount: sortedGifts.length,
             itemBuilder: (context, index) {
-              final gift = Gift.fromFirestore(sortedGifts[index]['id'], sortedGifts[index]);
+              final gift = Gift.fromFirestore(
+                sortedGifts[index]['id'],
+                sortedGifts[index],
+              );
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 elevation: 4,
@@ -128,10 +130,11 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                           const SizedBox(width: 6),
                           Text(
                             'Status: ${gift.status}',
-                            style:  TextStyle(fontSize: 14, color: gift.status == 'pledged'
-                                  ? Colors.red
-                                  : Colors.green, fontWeight: FontWeight.bold,
-                           ),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: gift.status == 'pledged' ? Colors.red : Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -148,28 +151,28 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                         children: [
                           if (gift.status != 'pledged')
                             ElevatedButton.icon(
-              onPressed: () async {
+                              onPressed: () async {
                                 final userId = FirebaseAuth.instance.currentUser!.uid;
                                 await giftController.pledgeGift(gift.giftId, userId);
-                                setState(() {}); 
+                                // No need to call setState() since StreamBuilder handles updates
                               },
-                           icon: Icon(Icons.add,color: Colors.white,size:30),
-                            label: Text(
-                              'Pledge Gift',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                              icon: const Icon(Icons.add, color: Colors.white, size: 30),
+                              label: const Text(
+                                'Pledge Gift',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ],
@@ -179,16 +182,6 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            '/addGift',
-            arguments: {'eventId': widget.eventId},
-          );
-        },
-        child: Icon(Icons.add),
       ),
     );
   }

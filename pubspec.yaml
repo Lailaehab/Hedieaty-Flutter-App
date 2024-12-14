@@ -47,6 +47,12 @@ dependencies:
   # shared_preferences: ^2.2.1
   uuid: ^4.5.1
   intl: ^0.20.1
+  image_picker: ^1.1.2
+  firebase_storage: ^12.3.7
+  permission_handler: ^11.3.1
+  device_info_plus: ^11.2.0
+  path_provider: ^2.1.5
+  cached_network_image: ^3.4.1
   # firebase_messaging: ^15.0.3
   # firebase_core: ^3.2.0
   # firebase_auth: ^5.1.2

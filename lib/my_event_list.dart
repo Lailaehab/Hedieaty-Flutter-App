@@ -77,14 +77,14 @@ class _MyEventListPageState extends State<MyEventListPage> {
             ascending: _ascending,
             getName: (event) => event.name,
             getCategory: (event) => event.category,
-            getStatus: (event) => _eventController.getEventStatus(event.date),
+            getStatus: (event) => _eventController.getEventStatus(event.date,event),
           );
 
           return ListView.builder(
             itemCount: sortedEvents.length,
             itemBuilder: (context, index) {
               final event = sortedEvents[index];
-              final eventStatus = _eventController.getEventStatus(event.date);
+              final eventStatus = _eventController.getEventStatus(event.date,event);
               final eventTime = _eventController.formatEventTime(event.date);
 
               return Card(

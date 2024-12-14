@@ -4,10 +4,34 @@ import 'controllers/authentication_controller.dart';
 import 'controllers/user_controller.dart';
 import 'controllers/gift_controller.dart';
 
-class MyPledgedGiftsPage extends StatelessWidget {
+class MyPledgedGiftsPage extends StatefulWidget {
+  @override
+  _MyPledgedGiftsPageState createState() => _MyPledgedGiftsPageState();
+}
+
+class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
   final AuthController _authController = AuthController();
   final UserController _userController = UserController();
   final GiftController _giftController = GiftController();
+  late Future<List<Map<String, dynamic>>> _pledgedGiftsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = _authController.getCurrentUser();
+    if (user != null) {
+      _pledgedGiftsFuture = _userController.getPledgedGifts(user.uid);
+    }
+  }
+
+  void _refreshPledgedGifts() {
+    final user = _authController.getCurrentUser();
+    if (user != null) {
+      setState(() {
+        _pledgedGiftsFuture = _userController.getPledgedGifts(user.uid);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,16 +47,16 @@ class MyPledgedGiftsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('My Pledged Gifts')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _userController.getPledgedGifts(userId),
+        future: _pledgedGiftsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No pledged gifts found.'));
+            return const Center(child: Text('No pledged gifts found.'));
           }
 
           final pledgedGifts = snapshot.data!;
@@ -41,16 +65,14 @@ class MyPledgedGiftsPage extends StatelessWidget {
             itemCount: pledgedGifts.length,
             itemBuilder: (context, index) {
               final gift = pledgedGifts[index];
-
-              // Fetch the due date of the gift
               return FutureBuilder<DateTime?>(
                 future: _giftController.getGiftDueDate(gift['id']),
                 builder: (context, dueDateSnapshot) {
                   if (dueDateSnapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
                   if (dueDateSnapshot.hasError || !dueDateSnapshot.hasData) {
-                    return SizedBox.shrink(); // No due date available
+                    return const SizedBox.shrink(); // No due date available
                   }
 
                   final dueDate = dueDateSnapshot.data!;
@@ -126,7 +148,7 @@ class MyPledgedGiftsPage extends StatelessWidget {
                               const SizedBox(width: 6),
                               Text(
                                 'Due Date: ${DateFormat('yyyy-MM-dd').format(dueDate.toLocal())}',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87), // Bold text
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
                               ),
                             ],
                           ),
@@ -139,16 +161,18 @@ class MyPledgedGiftsPage extends StatelessWidget {
                             ),
                           const Divider(height: 20, color: Colors.grey),
                           if (now.isBefore(dueDate))
-                            Center( // Center the button
+                            Center(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   await _giftController.unpledgeGift(gift['id'], userId);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Gift unpledged successfully.')),
+                                    const SnackBar(content: Text('Gift unpledged successfully.')),
                                   );
+                                  _refreshPledgedGifts();
                                 },
-                                icon: Icon(Icons.remove_circle_outline, color: Colors.white, size: 30),
-                                label: Text('Unpledge Gift',
+                                icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 30),
+                                label: const Text(
+                                  'Unpledge Gift',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
@@ -156,7 +180,7 @@ class MyPledgedGiftsPage extends StatelessWidget {
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,
-                                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -164,7 +188,7 @@ class MyPledgedGiftsPage extends StatelessWidget {
                               ),
                             )
                           else
-                            Text(
+                            const Text(
                               'Gift cannot be unpledged. Due date has passed.',
                               style: TextStyle(fontSize: 14, color: Colors.red),
                             ),

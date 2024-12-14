@@ -80,7 +80,7 @@ class EditEvent extends StatelessWidget {
                     giftIds: event.giftIds,
                   );
 
-                  updatedEvent.status=_eventController.getEventStatus(updatedEvent.date);
+                  updatedEvent.status=_eventController.getEventStatus(updatedEvent.date,updatedEvent);
                   await _eventController.saveEvent(updatedEvent);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Event updated successfully')),
