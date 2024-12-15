@@ -33,4 +33,18 @@ class ImageUtils {
       return null;
     }
   }
+
+    static Future<String?> saveGitfImageLocally(File image, String giftId) async {
+    try {
+      Directory appDir = await getApplicationDocumentsDirectory();
+      String imageFileName = '${giftId}.png';
+      String savePath = '${appDir.path}/$imageFileName';
+
+      File savedImage = await image.copy(savePath);
+      return savedImage.path;
+    } catch (e) {
+      print("Error saving image locally: $e");
+      return null;
+    }
+  }
 }

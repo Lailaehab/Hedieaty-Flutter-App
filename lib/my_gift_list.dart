@@ -4,6 +4,7 @@ import '/controllers/event_controller.dart';
 import '/models/gift.dart';
 import '/models/event.dart';
 import 'reusable/sorting_utils.dart';
+import 'dart:io';
 
 class MyGiftListPage extends StatefulWidget {
   final String eventId;
@@ -175,9 +176,8 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 if (gift.imageUrl != null)
-                                  Image.network(
-                                    gift.imageUrl!,
-                                    height: 150,
+                                  Image.file(File(gift.imageUrl!),
+                                    height: 100,
                                     fit: BoxFit.cover,
                                   ),
                                 const Divider(height: 20, color: Colors.grey),
@@ -200,17 +200,36 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                       ),
                                     if (gift.status != 'pledged') // Only show delete button for non-pledged gifts
                                       IconButton(
-                                        icon: Icon(Icons.delete,
-                                            color: Colors.red),
-                                        onPressed: () {
-                                          giftController.deleteGift(gift.giftId);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text('Gift deleted.')),
+                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Delete Gift'),
+                                              content: const Text('Are you sure you want to delete this Gift?'),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text('Cancel'),
+                                                  onPressed: () => Navigator.pop(context, false),
+                                                ),
+                                                TextButton(
+                                                  child: const Text('Delete'),
+                                                  onPressed: () => Navigator.pop(context, true),
+                                                ),
+                                              ],
+                                            ),
                                           );
-                                        },
-                                      ),
+
+                                          if (confirm == true) {
+                                            await giftController.deleteGift(gift.giftId);
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text('Gift deleted Successfully.')),
+                                            );
+                                  }
+                                },
+                              ),
                                   ],
                                 ),
                               ],

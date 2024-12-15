@@ -130,6 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         backgroundColor:Color.fromARGB(255, 111, 6, 120),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color:Color.fromARGB(255, 69, 0, 77),width: 3 )
                         ),
                       ),
                     ),

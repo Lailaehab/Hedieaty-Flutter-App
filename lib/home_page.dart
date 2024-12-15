@@ -230,7 +230,7 @@ class _HomePageContentState extends State<HomePageContent> {
                               },
                             ),
                             leading: CircleAvatar(
-                              radius: 30,
+                              radius: 35,
                               backgroundImage: friendProfilePicture!= null
                             ? FileImage(File(friendProfilePicture!))
                             : AssetImage("images/default_profile_picture.png") as ImageProvider,

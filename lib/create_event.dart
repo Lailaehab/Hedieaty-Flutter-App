@@ -20,67 +20,95 @@ class CreateEvent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Event')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.event, color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8),
+            Text('Create Event', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Event Name'),
-              ),
-              TextField(
-                controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
-              TextField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Location'),
-              ),
-              TextFormField(
-                controller: _dateController,
-                decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
-                readOnly: true,
-                onTap: () async {
-                  DateTime? selectedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(), // Prevent past dates
-                    lastDate: DateTime(2100),
-                  );
-                  if (selectedDate != null) {
-                    _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
-                  }
-                },
-              ),
-              TextFormField(
-                controller: _timeController,
-                decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
-                readOnly: true,
-                onTap: () async {
-                  TimeOfDay? selectedTime = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                    builder: (context, child) {
-                      return MediaQuery(
-                        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (selectedTime != null) {
-                    final now = DateTime.now();
-                    final time = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                      selectedTime.hour,
-                      selectedTime.minute,
-                    );
-                    _timeController.text = DateFormat('HH:mm').format(time); // Format in 24-hour format
-                  }
-                },
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Event Name'),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _categoryController,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _locationController,
+                        decoration: const InputDecoration(labelText: 'Location'),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _dateController,
+                        decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+                        readOnly: true,
+                        onTap: () async {
+                          DateTime? selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(), // Prevent past dates
+                            lastDate: DateTime(2100),
+                          );
+                          if (selectedDate != null) {
+                            _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+                          }
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _timeController,
+                        decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
+                        readOnly: true,
+                        onTap: () async {
+                          TimeOfDay? selectedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return MediaQuery(
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (selectedTime != null) {
+                            final now = DateTime.now();
+                            final time = DateTime(
+                              now.year,
+                              now.month,
+                              now.day,
+                              selectedTime.hour,
+                              selectedTime.minute,
+                            );
+                            _timeController.text = DateFormat('HH:mm').format(time); // Format in 24-hour format
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -138,8 +166,6 @@ class CreateEvent extends StatelessWidget {
                     giftIds: [], // No gifts initially
                   );
 
-                  event.status = _eventController.getEventStatus(event.date, event);
-
                   // Save the event using the controller
                   await _eventController.saveEvent(event);
 
@@ -149,7 +175,14 @@ class CreateEvent extends StatelessWidget {
                   );
                   Navigator.pop(context);
                 },
-                child: const Text('Create Event'),
+                child: const Text('Create Event', style: TextStyle(fontSize: 22,color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ],
           ),

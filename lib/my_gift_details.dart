@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io'; // For using File
-import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../controllers/gift_controller.dart';
+import '../reusable/image_utils.dart';
 
 class MyGiftDetailsPage extends StatefulWidget {
   final String giftId;
@@ -23,8 +22,8 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
   TextEditingController priceController = TextEditingController();
   TextEditingController imageUrlController = TextEditingController();
 
-  String? imageUrl; // Stores the image path
-  File? selectedImage; // Stores the selected image file
+  String? imageUrl;
+  File? selectedImage;
   bool isLoading = true;
 
   @override
@@ -34,83 +33,90 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
   }
 
   Future<void> _loadGiftDetails() async {
-    final gift = await giftController.getGiftById(widget.giftId);
-    if (gift != null) {
-      setState(() {
-        nameController.text = gift['name'];
-        descriptionController.text = gift['description'];
-        categoryController.text = gift['category'];
-        priceController.text = gift['price'].toString();
-        imageUrl = gift['imageUrl'];
-        imageUrlController.text = imageUrl ?? ''; // Set the image URL in the text field
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-Future<void> _pickImage() async {
-  final picker = ImagePicker();
-  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-  if (pickedFile != null) {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/${widget.giftId}_image.png';
-      final imageFile = File(pickedFile.path);
-
-      // Save image to app's local directory
-      final savedImage = await imageFile.copy(filePath);
-
-      // Log the file paths for debugging
-      print('Picked file path: ${pickedFile.path}');
-      print('Saved file path: ${savedImage.path}');
-
-      if (await savedImage.exists()) {
-        print('File saved successfully.');
+      final gift = await giftController.getGiftById(widget.giftId);
+      if (gift != null) {
         setState(() {
-          selectedImage = savedImage;
-          imageUrl = savedImage.path;
-          imageUrlController.text = imageUrl!;
+          nameController.text = gift['name'];
+          descriptionController.text = gift['description'];
+          categoryController.text = gift['category'];
+          priceController.text = gift['price'].toString();
+          imageUrl = gift['imageUrl'];
+          imageUrlController.text = imageUrl ?? '';
+          isLoading = false;
         });
-
-        // Update Firestore with the local image path
-        await giftController.updateGift(widget.giftId, {'imageUrl': imageUrl!});
       } else {
-        print('File saving failed.');
+        setState(() {
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print('Error while saving image: $e');
+      setState(() {
+        isLoading = false;
+      });
+      print("Error loading gift details: $e");
     }
-  } else {
-    print('No image selected.');
   }
-}
 
-Future<void> _updateGift() async {
-  if (_formKey.currentState!.validate()) {
-    final updatedData = {
-      'name': nameController.text,
-      'description': descriptionController.text,
-      'category': categoryController.text,
-      'price': double.parse(priceController.text),
-      'imageUrl': imageUrl,
-    };
+  Future<void> _pickAndUploadImage(String giftId) async {
+    if (await ImageUtils.requestGalleryPermission()) {
+      final pickedImage = await ImageUtils.pickImageFromGallery();
+      if (pickedImage != null) {
+        final savedPath = await ImageUtils.saveGitfImageLocally(pickedImage, giftId);
+        if (savedPath != null) {
+          setState(() {
+            selectedImage = pickedImage;
+            imageUrl = savedPath;
+            imageUrlController.text = imageUrl!;
+          });
 
-    await giftController.updateGift(widget.giftId, updatedData);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Gift updated successfully!')),
-    );
-
-    // Delay navigation back by 1 second
-    await Future.delayed(Duration(seconds: 1));
-    Navigator.pop(context); // Navigate back
+          await giftController.updateGift(widget.giftId, {'imageUrl': imageUrl!});
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image uploaded successfully!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save the image locally.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No image selected.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gallery permission denied.')),
+      );
+    }
   }
-}
 
+  Future<void> _updateGift() async {
+    if (_formKey.currentState!.validate()) {
+      final updatedData = {
+        'name': nameController.text,
+        'description': descriptionController.text,
+        'category': categoryController.text,
+        'price': double.parse(priceController.text),
+        'imageUrl': imageUrl,
+      };
+
+      try {
+        await giftController.updateGift(widget.giftId, updatedData);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gift updated successfully!')),
+        );
+
+        await Future.delayed(Duration(seconds: 1));
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update gift.')),
+        );
+        print("Error updating gift: $e");
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -132,7 +138,17 @@ Future<void> _updateGift() async {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Gift Details')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.edit, color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8),
+            Text('Edit Gift Details', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -141,49 +157,56 @@ Future<void> _updateGift() async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: 'Gift Name'),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter a name'
-                      : null,
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(labelText: 'Gift Name', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Please enter a name' : null,
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: descriptionController,
+                          decoration: InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Please enter a description' : null,
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: categoryController,
+                          decoration: InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Please enter a category' : null,
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: priceController,
+                          decoration: InputDecoration(labelText: 'Price', border: OutlineInputBorder()),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a price';
+                            }
+                            final price = double.tryParse(value);
+                            if (price == null || price <= 0) {
+                              return 'Please enter a valid price';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(labelText: 'Description'),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter a description'
-                      : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: categoryController,
-                  decoration: InputDecoration(labelText: 'Category'),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter a category'
-                      : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: priceController,
-                  decoration: InputDecoration(labelText: 'Price'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a price';
-                    }
-                    final price = double.tryParse(value);
-                    if (price == null || price <= 0) {
-                      return 'Please enter a valid price';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-
-                // Display the selected image
-                selectedImage != null
+                SizedBox(height: 20),
+                Center(
+                child:selectedImage != null
                     ? Image.file(selectedImage!, height: 150, fit: BoxFit.cover)
                     : imageUrl != null
                         ? Image.file(File(imageUrl!), height: 150, fit: BoxFit.cover)
@@ -192,26 +215,37 @@ Future<void> _updateGift() async {
                             height: 200,
                             color: Colors.grey[200],
                             child: Icon(Icons.image, color: Colors.grey),
-                          ),
-
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _pickImage,
-                  child: Text('Upload Image'),
+                          ),),
+                SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _pickAndUploadImage(widget.giftId),
+                    icon: Icon(Icons.upload, color: Colors.white),
+                    label: Text('Upload Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      textStyle: TextStyle(fontSize: 25),
+                      backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 16),
-
-                // Image URL TextField
-                TextFormField(
-                  controller: imageUrlController,
-                  decoration: InputDecoration(labelText: 'Image URL'),
-                  enabled: false,
-                ),
-                SizedBox(height: 16),
-
-                ElevatedButton(
-                  onPressed: _updateGift,
-                  child: Text('Save Changes'),
+                SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _updateGift,
+                    child: Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      textStyle: TextStyle(fontSize: 25),
+                      backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

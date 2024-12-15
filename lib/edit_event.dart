@@ -27,70 +27,98 @@ class EditEvent extends StatelessWidget {
     _timeController.text = event.date.toDate().toString().split(' ')[1].substring(0, 5);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Event')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.event, color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8),
+            Text('Edit Event', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Event Name'),
-              ),
-              TextField(
-                controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
-              TextField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Location'),
-              ),
-              TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: event.date.toDate(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2100),
-                  );
-                  if (pickedDate != null) {
-                    _dateController.text = pickedDate.toIso8601String().split('T')[0];
-                  }
-                },
-              ),
-              TextFormField(
-                controller: _timeController,
-                readOnly: true,
-                decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
-                onTap: () async {
-                  TimeOfDay? pickedTime = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay(
-                      hour: int.parse(_timeController.text.split(':')[0]),
-                      minute: int.parse(_timeController.text.split(':')[1]),
-                    ),
-                    builder: (context, child) {
-                      return MediaQuery(
-                        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (pickedTime != null) {
-                    final now = DateTime.now();
-                    final time = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                      pickedTime.hour,
-                      pickedTime.minute,
-                    );
-                    _timeController.text = DateFormat('HH:mm').format(time);
-                  }
-                },
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Event Name'),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _categoryController,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _locationController,
+                        decoration: const InputDecoration(labelText: 'Location'),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _dateController,
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: event.date.toDate(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (pickedDate != null) {
+                            _dateController.text = pickedDate.toIso8601String().split('T')[0];
+                          }
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _timeController,
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
+                        onTap: () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay(
+                              hour: int.parse(_timeController.text.split(':')[0]),
+                              minute: int.parse(_timeController.text.split(':')[1]),
+                            ),
+                            builder: (context, child) {
+                              return MediaQuery(
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (pickedTime != null) {
+                            final now = DateTime.now();
+                            final time = DateTime(
+                              now.year,
+                              now.month,
+                              now.day,
+                              pickedTime.hour,
+                              pickedTime.minute,
+                            );
+                            _timeController.text = DateFormat('HH:mm').format(time);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -135,7 +163,14 @@ class EditEvent extends StatelessWidget {
                   // Navigate back
                   Navigator.pop(context);
                 },
-                child: const Text('Save Changes'),
+                child: const Text('Save Changes', style: TextStyle(fontSize: 22,color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ],
           ),

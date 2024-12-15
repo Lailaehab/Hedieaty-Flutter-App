@@ -112,6 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     backgroundColor: Color.fromARGB(255, 111, 6, 120),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color:Color.fromARGB(255, 69, 0, 77),width: 3 )
                     ),
                   ),
                 ),
@@ -156,8 +157,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
                                 ),
                                 child: ExpansionTile(
-                                  title: Text(event.name ?? 'Event Name', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  subtitle: Text(event.status ?? 'Unknown Status', style: const TextStyle(fontSize: 14)),
+                                  title: Text(event.name , style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                  subtitle: Text(event.status , style: const TextStyle(fontSize: 14)),
                                   children: [
                                     StreamBuilder<List<Map<String, dynamic>>>( 
                                       stream: giftController.getGiftsForEvent(event.eventId),

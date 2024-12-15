@@ -184,10 +184,11 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
+                                  backgroundColor: const Color.fromARGB(255, 132, 0, 147),
                                   padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(color:Color.fromARGB(204, 95, 0, 106),width: 3 )
                                   ),
                                 ),
                               ),
