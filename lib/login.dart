@@ -43,9 +43,9 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.card_giftcard, color: Colors.green, size: 30),
-            SizedBox(width: 8), // Space between icon and title
-            Text('Hedieaty', style: TextStyle(fontWeight: FontWeight.bold)),
+            Icon(Icons.card_giftcard, color:  Color.fromARGB(255, 111, 6, 120), size: 35),
+            SizedBox(width: 8), 
+            Text('Hedieaty', style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 111, 6, 120),fontSize: 30)),
           ],
         ),
         centerTitle: false,
@@ -54,13 +54,13 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center, // Center the column
+            crossAxisAlignment: CrossAxisAlignment.center, 
             children: [
               SizedBox(height: 40),
               Text(
                 'Welcome Back!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center, // Center the text
+                textAlign: TextAlign.center, 
               ),
               SizedBox(height: 20),
               TextField(
@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                         textStyle: TextStyle(fontSize: 25),
-                        backgroundColor: Colors.green, // Background color
+                        backgroundColor:Color.fromARGB(255, 111, 6, 120), 
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -110,13 +110,13 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: Text(
                   'Don\'t have an account? Sign Up',
-                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(color:  Color.fromARGB(255, 111, 6, 120), fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.green),
+                    side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120)),
                   ),
                 ),
               ),

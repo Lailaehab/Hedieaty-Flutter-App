@@ -45,7 +45,11 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
     final userId = user.uid;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Pledged Gifts')),
+      appBar: AppBar(title: Row(
+          children: [
+            Icon(Icons.card_giftcard_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8), 
+            Text('My Pledged Gifts', style: TextStyle(fontSize: 24,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _pledgedGiftsFuture,
         builder: (context, snapshot) {
@@ -83,6 +87,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120))
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),

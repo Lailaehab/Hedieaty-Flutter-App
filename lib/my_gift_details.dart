@@ -17,14 +17,13 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
   final GiftController giftController = GiftController();
   final _formKey = GlobalKey<FormState>();
 
-  // Form field controllers
   TextEditingController nameController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController imageUrlController = TextEditingController();
 
-  String? imageUrl; // Stores the image URL path
+  String? imageUrl; // Stores the image path
   File? selectedImage; // Stores the selected image file
   bool isLoading = true;
 

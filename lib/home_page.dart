@@ -12,6 +12,7 @@ import '/models/user.dart';
 import '/models/event.dart';
 import 'reusable/search.dart';
 import 'notifications.dart';
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   @override
@@ -70,20 +71,19 @@ class _HomePageContentState extends State<HomePageContent> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color.fromARGB(255, 249, 249, 249),
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Hedieaty',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          children: [
+            Icon(Icons.card_giftcard, color:  Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8), 
+            Text('Hedieaty', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),
+          ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.person_add,size: 32,),
+            icon: Icon(Icons.person_add, size: 32, color: Color.fromARGB(255, 111, 6, 120)),
             onPressed: () {
               _showAddFriendDialog(context);
             },
@@ -93,7 +93,7 @@ class _HomePageContentState extends State<HomePageContent> {
               await authController.logOut();
               Navigator.of(context).pushReplacementNamed('/signup');
             },
-            icon: const Icon(Icons.logout,size: 32,),
+            icon: const Icon(Icons.logout, size: 32, color: Color.fromARGB(255, 111, 6, 120)),
           ),
         ],
       ),
@@ -109,20 +109,21 @@ class _HomePageContentState extends State<HomePageContent> {
                   MaterialPageRoute(builder: (context) => CreateEvent()),
                 );
               },
-              icon: Icon(Icons.add,color: Colors.white,size:30),
+              icon: Icon(Icons.add, color: Color.fromARGB(255, 111, 6, 120), size: 30),
               label: Text(
                 'Create Your Own Event',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: const Color.fromARGB(255, 111, 6, 120),
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+                backgroundColor: Color.fromARGB(255, 252, 215, 255),
                 padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
                 ),
               ),
             ),
@@ -132,7 +133,7 @@ class _HomePageContentState extends State<HomePageContent> {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search Friends',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color:  Color.fromARGB(255, 111, 6, 120)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -195,38 +196,53 @@ class _HomePageContentState extends State<HomePageContent> {
                         var friendProfilePicture = friendData['profilePicture'] ?? 'default_image_url';
                         var friendId = friendDocs[index].id;
 
-                        return StreamBuilder<List<Event>>(
-                          stream: EventController().getEventsForUser(friendId),
-                          builder: (context, eventSnapshot) {
-                            if (eventSnapshot.connectionState == ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
-                            }
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))
+                          ),
+                          elevation: 5,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.all(16),
+                            title: Text(
+                              friendName,
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: StreamBuilder<List<Event>>(
+                              stream: EventController().getEventsForUser(friendId),
+                              builder: (context, eventSnapshot) {
+                                if (eventSnapshot.connectionState == ConnectionState.waiting) {
+                                  return Center(child: CircularProgressIndicator());
+                                }
 
-                            if (eventSnapshot.hasError) {
-                              return Center(child: Text('Error: ${eventSnapshot.error}'));
-                            }
+                                if (eventSnapshot.hasError) {
+                                  return Center(child: Text('Error: ${eventSnapshot.error}'));
+                                }
 
-                            var upcomingEvents = eventSnapshot.data?.where((event) => event.status == 'Upcoming').toList();
-
-                            return ListTile(
-                              title: Text(friendName),
-                              subtitle: Text(
-                                upcomingEvents?.isEmpty ?? true
-                                    ? "No Upcoming Events"
-                                    : "Upcoming Events: ${upcomingEvents!.length}",
-                              ),
-                              leading: CircleAvatar(
-                                backgroundImage: NetworkImage(friendProfilePicture),
-                              ),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/friendEvents',
-                                  arguments: {'friendId': friendId},
+                                var upcomingEvents = eventSnapshot.data?.where((event) => event.status == 'Upcoming').toList();
+                                return Text(
+                                  upcomingEvents?.isEmpty ?? true
+                                      ? "No Upcoming Events"
+                                      : "Upcoming Events: ${upcomingEvents!.length}",
+                                  style: TextStyle(color: Colors.green,fontSize: 15),
                                 );
                               },
-                            );
-                          },
+                            ),
+                            leading: CircleAvatar(
+                              radius: 30,
+                              backgroundImage: friendProfilePicture!= null
+                            ? FileImage(File(friendProfilePicture!))
+                            : AssetImage("images/default_profile_picture.png") as ImageProvider,
+                            ),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/friendEvents',
+                                arguments: {'friendId': friendId},
+                              );
+                            },
+                          ),
                         );
                       },
                     );

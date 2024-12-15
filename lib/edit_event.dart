@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/event.dart';
 import '../controllers/event_controller.dart';
+import 'package:intl/intl.dart';
 
 class EditEvent extends StatelessWidget {
   final Event event;
@@ -9,6 +10,7 @@ class EditEvent extends StatelessWidget {
 
   EditEvent({required this.event});
 
+  // Controllers for form fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
@@ -17,7 +19,7 @@ class EditEvent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pre-fill the form fields
+    // Initialize field values with event data
     _nameController.text = event.name;
     _categoryController.text = event.category;
     _locationController.text = event.location;
@@ -43,13 +45,52 @@ class EditEvent extends StatelessWidget {
                 controller: _locationController,
                 decoration: const InputDecoration(labelText: 'Location'),
               ),
-              TextField(
+              TextFormField(
                 controller: _dateController,
+                readOnly: true,
                 decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: event.date.toDate(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime(2100),
+                  );
+                  if (pickedDate != null) {
+                    _dateController.text = pickedDate.toIso8601String().split('T')[0];
+                  }
+                },
               ),
-              TextField(
+              TextFormField(
                 controller: _timeController,
-                decoration: const InputDecoration(labelText: 'Time (HH:MM)'),
+                readOnly: true,
+                decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
+                onTap: () async {
+                  TimeOfDay? pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(
+                      hour: int.parse(_timeController.text.split(':')[0]),
+                      minute: int.parse(_timeController.text.split(':')[1]),
+                    ),
+                    builder: (context, child) {
+                      return MediaQuery(
+                        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (pickedTime != null) {
+                    final now = DateTime.now();
+                    final time = DateTime(
+                      now.year,
+                      now.month,
+                      now.day,
+                      pickedTime.hour,
+                      pickedTime.minute,
+                    );
+                    _timeController.text = DateFormat('HH:mm').format(time);
+                  }
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -65,10 +106,11 @@ class EditEvent extends StatelessWidget {
                     return;
                   }
 
-                  // Combine date and time
+                  // Combine date and time fields into a DateTime object
                   final dateTime = DateTime.parse('${_dateController.text}T${_timeController.text}');
                   final timestamp = Timestamp.fromDate(dateTime);
 
+                  // Create updated Event object
                   final updatedEvent = Event(
                     eventId: event.eventId,
                     userId: event.userId,
@@ -80,11 +122,17 @@ class EditEvent extends StatelessWidget {
                     giftIds: event.giftIds,
                   );
 
-                  updatedEvent.status=_eventController.getEventStatus(updatedEvent.date,updatedEvent);
+                  // Update event status
+                  updatedEvent.status = _eventController.getEventStatus(updatedEvent.date, updatedEvent);
+
+                  // Save updated event
                   await _eventController.saveEvent(updatedEvent);
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Event updated successfully')),
                   );
+
+                  // Navigate back
                   Navigator.pop(context);
                 },
                 child: const Text('Save Changes'),

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../controllers/event_controller.dart';
 import '../models/event.dart';
 import '../controllers/authentication_controller.dart';
+import 'package:intl/intl.dart';
 
 class CreateEvent extends StatelessWidget {
   final EventController _eventController = EventController();
@@ -37,13 +38,49 @@ class CreateEvent extends StatelessWidget {
                 controller: _locationController,
                 decoration: const InputDecoration(labelText: 'Location'),
               ),
-              TextField(
+              TextFormField(
                 controller: _dateController,
                 decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+                readOnly: true,
+                onTap: () async {
+                  DateTime? selectedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(), // Prevent past dates
+                    lastDate: DateTime(2100),
+                  );
+                  if (selectedDate != null) {
+                    _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+                  }
+                },
               ),
-              TextField(
+              TextFormField(
                 controller: _timeController,
-                decoration: const InputDecoration(labelText: 'Time (HH:MM)'),
+                decoration: const InputDecoration(labelText: 'Time (HH:mm)'),
+                readOnly: true,
+                onTap: () async {
+                  TimeOfDay? selectedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                    builder: (context, child) {
+                      return MediaQuery(
+                        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (selectedTime != null) {
+                    final now = DateTime.now();
+                    final time = DateTime(
+                      now.year,
+                      now.month,
+                      now.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+                    _timeController.text = DateFormat('HH:mm').format(time); // Format in 24-hour format
+                  }
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -60,8 +97,22 @@ class CreateEvent extends StatelessWidget {
                     return;
                   }
 
-                  // Combine date and time
-                  final dateTime = DateTime.parse('${_dateController.text}T${_timeController.text}');
+                  // Parse the selected date and time into a valid DateTime object
+                  final date = DateTime.parse(_dateController.text); // Parse the date directly
+                  final timeParts = _timeController.text.split(':');
+                  final timeOfDay = TimeOfDay(
+                    hour: int.parse(timeParts[0]),
+                    minute: int.parse(timeParts[1]),
+                  );
+
+                  // Combine date and time into a valid DateTime
+                  final dateTime = DateTime(
+                    date.year,
+                    date.month,
+                    date.day,
+                    timeOfDay.hour,
+                    timeOfDay.minute,
+                  );
                   final timestamp = Timestamp.fromDate(dateTime);
 
                   // Get the logged-in user's ID
@@ -87,9 +138,10 @@ class CreateEvent extends StatelessWidget {
                     giftIds: [], // No gifts initially
                   );
 
-                  event.status=_eventController.getEventStatus(event.date,event);
+                  event.status = _eventController.getEventStatus(event.date, event);
+
                   // Save the event using the controller
-                  await _eventController.saveEvent( event);
+                  await _eventController.saveEvent(event);
 
                   // Notify user and go back
                   ScaffoldMessenger.of(context).showSnackBar(

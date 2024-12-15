@@ -23,7 +23,11 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gifts for Event'),
+        title: Row(
+          children: [
+            Icon(Icons.card_giftcard_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 23),
+            SizedBox(width: 1), 
+            Text('Gifts For Event', style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),
         actions: [
           SortingUtils.buildSortMenu(
             sortOption: _sortOption,
@@ -76,6 +80,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120))
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),

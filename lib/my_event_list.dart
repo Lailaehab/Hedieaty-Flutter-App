@@ -32,12 +32,15 @@ class _MyEventListPageState extends State<MyEventListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Events'),
+        title:Row(
+          children: [
+            Icon(Icons.event_available_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8), 
+            Text('My Events', style: TextStyle(fontSize: 24,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size:35),
             onPressed: () {
-              // Navigate to Create Event page
               Navigator.pushNamed(context, '/createEvent');
             },
           ),
@@ -92,13 +95,13 @@ class _MyEventListPageState extends State<MyEventListPage> {
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Event Name
                       Text(
                         event.name,
                         style: const TextStyle(
@@ -108,7 +111,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Event Category
+
                       Row(
                         children: [
                           Icon(Icons.category, color: Colors.grey[600], size: 18),
@@ -120,7 +123,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Event Date
+
                       Row(
                         children: [
                           Icon(Icons.calendar_today, color: Colors.grey[600], size: 18),
@@ -132,7 +135,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Event Time
+
                       Row(
                         children: [
                           Icon(Icons.access_time, color: Colors.grey[600], size: 18),
@@ -144,7 +147,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Event Location
+
                       Row(
                         children: [
                           Icon(Icons.location_on, color: Colors.grey[600], size: 18),
@@ -156,7 +159,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Event Status
+
                       Row(
                         children: [
                           Icon(Icons.info, color: Colors.grey[600], size: 18),
@@ -176,7 +179,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
                         ],
                       ),
                       const Divider(height: 20, color: Colors.grey),
-                      // Action Buttons
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -201,7 +204,6 @@ class _MyEventListPageState extends State<MyEventListPage> {
                               ),
                             ),
                             onPressed: () {
-                              // Navigate to gift list
                               Navigator.pushNamed(
                                 context,
                                 '/myGifts',
@@ -214,7 +216,6 @@ class _MyEventListPageState extends State<MyEventListPage> {
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () {
-                                  // Navigate to Edit Event page
                                   Navigator.pushNamed(
                                     context,
                                     '/editEvent',
@@ -225,7 +226,6 @@ class _MyEventListPageState extends State<MyEventListPage> {
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () async {
-                                  // Confirm and delete event
                                   final confirm = await showDialog<bool>(
                                     context: context,
                                     builder: (context) => AlertDialog(

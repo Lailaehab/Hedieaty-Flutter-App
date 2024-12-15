@@ -5,7 +5,6 @@ class AuthController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Sign-Up Method
   Future<String?> signUp(String name, String email, String password, String phoneNumber) async {
     try {
       // Validate email and password
@@ -13,14 +12,12 @@ class AuthController {
         throw Exception("Invalid email or password.");
       }
 
-      // Create user in Firebase Auth
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    UserCredential credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      // Add user to Firestore
-      await _firestore.collection('users').doc(credential.user!.uid).set({
+    await _firestore.collection('users').doc(credential.user!.uid).set({
         'name': name,
         'email': email,
         'phoneNumber': phoneNumber,
@@ -36,7 +33,6 @@ class AuthController {
     }
   }
 
-  // Log-In Method
   Future<User?> logIn(String email, String password) async {
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
@@ -50,13 +46,24 @@ class AuthController {
     }
   }
 
-  // Log-Out Method
   Future<void> logOut() async {
     await _auth.signOut();
   }
 
-  // Get Current User
   User? getCurrentUser() {
     return _auth.currentUser;
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        await currentUser.updatePassword(newPassword);
+        await currentUser.reload();
+        currentUser = _auth.currentUser;
+      }
+    } catch (e) {
+      throw Exception("Error updating password: $e");
+    }
   }
 }

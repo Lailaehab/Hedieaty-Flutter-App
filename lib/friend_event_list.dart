@@ -21,7 +21,11 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Friend's Events"),
+        title: Row(
+          children: [
+            Icon(Icons.event_available_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 25),
+            SizedBox(width: 1), 
+            Text('Friend Events', style: TextStyle(fontSize: 21,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),
         actions: [
           SortingUtils.buildSortMenu(
             sortOption: _sortOption,
@@ -79,6 +83,7 @@ class _FriendEventListPageState extends State<FriendEventListPage> {
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120))
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),

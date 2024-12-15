@@ -57,10 +57,10 @@ class SortingUtils {
       child: Row(
         children: [
           Icon(
-            Icons.sort, // Sort icon
+            Icons.sort,
             color: Colors.blue,
             size: 20,
-          ), // Space between icon and text
+          ), 
           Text(
             'Sort by: ${_getSortOptionText(sortOption)}',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),

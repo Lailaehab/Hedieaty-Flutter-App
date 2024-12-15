@@ -30,7 +30,7 @@ class Gift {
       name: data['name'],
       description: data['description'],
       category: data['category'],
-      price: data['price'],
+      price: (data['price'] as num).toDouble(),
       status: data['status'],
       pledgedBy: data['pledgedBy'],
       imageUrl: data['imageUrl'],

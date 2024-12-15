@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FriendSearchController {
   /// Filters friends by name.
-  /// [friendsIds] are the IDs of the current user's friends.
   /// [query] is the search term entered by the user.
   Stream<List<QueryDocumentSnapshot>> searchFriendsByName(
       List<String> friendsIds, String query) {

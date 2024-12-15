@@ -57,9 +57,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.card_giftcard, color: Colors.green, size: 30),
+            Icon(Icons.card_giftcard, color:  Color.fromARGB(255, 111, 6, 120), size: 35),
             SizedBox(width: 8),
-            Text('Hedieaty', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Hedieaty', style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 111, 6, 120),fontSize: 30)),
           ],
         ),
         centerTitle: false,
@@ -127,7 +127,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical:16,horizontal: 16),
                         textStyle: TextStyle(fontSize: 25),
-                        backgroundColor: Colors.green,
+                        backgroundColor:Color.fromARGB(255, 111, 6, 120),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -143,13 +143,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
                 child: Text(
                   'Already have an account? Log In',
-                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(color:  Color.fromARGB(255, 111, 6, 120), fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical:16,horizontal: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.green), 
+                    side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120)), 
                   ),
                 ),
               ),
