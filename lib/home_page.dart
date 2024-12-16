@@ -11,8 +11,6 @@ import '/reusable/nav_bar.dart';
 import '/models/user.dart';
 import '/models/event.dart';
 import 'reusable/search.dart';
-import 'notifications.dart';
-import 'dart:io';
 
 class HomePage extends StatefulWidget {
   @override
@@ -27,7 +25,6 @@ class _HomePageState extends State<HomePage> {
     MyEventListPage(),
     MyPledgedGiftsPage(),
     ProfilePage(),
-    NotificationsPage(),
   ];
 
   @override
@@ -193,7 +190,7 @@ class _HomePageContentState extends State<HomePageContent> {
                       itemBuilder: (context, index) {
                         var friendData = friendDocs[index].data() as Map<String, dynamic>;
                         var friendName = friendData['name'];
-                        var friendProfilePicture = friendData['profilePicture'] ?? 'default_image_url';
+                        var friendProfilePicture = friendData['profilePicture'] ?? 'assets/default_profile.jpg';
                         var friendId = friendDocs[index].id;
 
                         return Card(
@@ -232,8 +229,8 @@ class _HomePageContentState extends State<HomePageContent> {
                             leading: CircleAvatar(
                               radius: 35,
                               backgroundImage: friendProfilePicture!= null
-                            ? FileImage(File(friendProfilePicture!))
-                            : AssetImage("images/default_profile_picture.png") as ImageProvider,
+                            ? AssetImage(friendProfilePicture!) as ImageProvider
+                            : AssetImage("assets/default_profile.jpg") as ImageProvider,
                             ),
                             onTap: () {
                               Navigator.pushNamed(

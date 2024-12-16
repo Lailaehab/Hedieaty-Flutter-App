@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import '../controllers/gift_controller.dart';
 import '../reusable/image_utils.dart';
 
@@ -20,10 +19,9 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
   TextEditingController descriptionController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   TextEditingController priceController = TextEditingController();
-  TextEditingController imageUrlController = TextEditingController();
 
-  String? imageUrl;
-  File? selectedImage;
+  String? imageUrl; // Stores the selected asset path
+  String? updatedImageUrl; // Stores the updated image URL for saving later
   bool isLoading = true;
 
   @override
@@ -41,8 +39,8 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
           descriptionController.text = gift['description'];
           categoryController.text = gift['category'];
           priceController.text = gift['price'].toString();
-          imageUrl = gift['imageUrl'];
-          imageUrlController.text = imageUrl ?? '';
+          imageUrl = gift['imageUrl'] ?? 'assets/default_profile.jpg';
+          updatedImageUrl = imageUrl; // Initialize the updatedImageUrl
           isLoading = false;
         });
       } else {
@@ -58,37 +56,46 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
     }
   }
 
-  Future<void> _pickAndUploadImage(String giftId) async {
-    if (await ImageUtils.requestGalleryPermission()) {
-      final pickedImage = await ImageUtils.pickImageFromGallery();
-      if (pickedImage != null) {
-        final savedPath = await ImageUtils.saveGitfImageLocally(pickedImage, giftId);
-        if (savedPath != null) {
-          setState(() {
-            selectedImage = pickedImage;
-            imageUrl = savedPath;
-            imageUrlController.text = imageUrl!;
-          });
-
-          await giftController.updateGift(widget.giftId, {'imageUrl': imageUrl!});
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image uploaded successfully!')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save the image locally.')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No image selected.')),
+  Future<void> _pickImageFromAssets() async {
+    String? selectedImage = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Select Gift Image"),
+          content: SingleChildScrollView(
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: ImageUtils.availableImages.map((imagePath) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop(imagePath);
+                  },
+                  child: Image.asset(
+                    imagePath,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
         );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gallery permission denied.')),
-      );
+      },
+    );
+
+    if (selectedImage != null) {
+      setState(() {
+        updatedImageUrl = selectedImage; // Store the selected image in updatedImageUrl
+      });
     }
+  }
+
+  Future<void> _removeImage() async {
+    setState(() {
+      updatedImageUrl = null; // Reset image locally for saving later
+    });
   }
 
   Future<void> _updateGift() async {
@@ -98,7 +105,7 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
         'description': descriptionController.text,
         'category': categoryController.text,
         'price': double.parse(priceController.text),
-        'imageUrl': imageUrl,
+        'imageUrl': updatedImageUrl, 
       };
 
       try {
@@ -124,7 +131,6 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
     descriptionController.dispose();
     categoryController.dispose();
     priceController.dispose();
-    imageUrlController.dispose();
     super.dispose();
   }
 
@@ -206,40 +212,53 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                 ),
                 SizedBox(height: 20),
                 Center(
-                child:selectedImage != null
-                    ? Image.file(selectedImage!, height: 150, fit: BoxFit.cover)
-                    : imageUrl != null
-                        ? Image.file(File(imageUrl!), height: 150, fit: BoxFit.cover)
-                        : Container(
-                            width: 200,
-                            height: 200,
-                            color: Colors.grey[200],
-                            child: Icon(Icons.image, color: Colors.grey),
-                          ),),
+                  child: updatedImageUrl != null
+                      ? Image.asset(updatedImageUrl!, height: 150, fit: BoxFit.cover)
+                      : Container(
+                          width: 200,
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image, color: Colors.grey),
+                        ),
+                ),
                 SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickAndUploadImage(widget.giftId),
-                    icon: Icon(Icons.upload, color: Colors.white),
-                    label: Text('Upload Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                      textStyle: TextStyle(fontSize: 25),
-                      backgroundColor: Color.fromARGB(255, 111, 6, 120),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickImageFromAssets,
+                      icon: Icon(Icons.upload, color: Colors.white),
+                      label: Text('Select Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      onPressed: _removeImage,
+                      icon: Icon(Icons.delete, color: Colors.white),
+                      label: Text('Remove Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        backgroundColor: const Color.fromARGB(255, 0, 79, 170),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: _updateGift,
-                    child: Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25)),
+                    child: Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                      textStyle: TextStyle(fontSize: 25),
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                       backgroundColor: Color.fromARGB(255, 111, 6, 120),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

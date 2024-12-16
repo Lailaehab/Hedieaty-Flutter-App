@@ -4,7 +4,6 @@ import '/controllers/event_controller.dart';
 import '/models/gift.dart';
 import '/models/event.dart';
 import 'reusable/sorting_utils.dart';
-import 'dart:io';
 
 class MyGiftListPage extends StatefulWidget {
   final String eventId;
@@ -44,9 +43,16 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.card_giftcard_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 23),
-            SizedBox(width: 1), 
-            Text('Gifts For Event', style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),
+            Icon(Icons.card_giftcard_outlined,
+                color: Color.fromARGB(255, 111, 6, 120), size: 23),
+            SizedBox(width: 1),
+            Text('Gifts For Event',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 111, 6, 120))),
+          ],
+        ),
         actions: [
           SortingUtils.buildSortMenu(
             sortOption: _sortOption,
@@ -104,7 +110,8 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                           elevation: 4,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120))
+                            side: BorderSide(
+                                color: Color.fromARGB(255, 111, 6, 120)),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
@@ -128,7 +135,10 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                     Text(
                                       'Category: ${gift.category}',
                                       style: const TextStyle(
-                                          fontSize: 16, color: Colors.grey,fontWeight: FontWeight.bold,),
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -141,7 +151,10 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                     Text(
                                       'Price: \$${gift.price}',
                                       style: const TextStyle(
-                                          fontSize: 16, color: Colors.grey,fontWeight: FontWeight.bold,),
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -154,7 +167,10 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                     Text(
                                       'Description: ${gift.description}',
                                       style: const TextStyle(
-                                          fontSize: 16, color: Colors.grey,fontWeight: FontWeight.bold,),
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -168,7 +184,9 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                       'Status: ${gift.status}',
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: gift.status == 'pledged' ? Colors.red : Colors.green,
+                                        color: gift.status == 'pledged'
+                                            ? Colors.red
+                                            : Colors.green,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -176,62 +194,74 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 if (gift.imageUrl != null)
-                                  Image.file(File(gift.imageUrl!),
-                                    height: 100,
+                                  Image.asset(gift.imageUrl!,
+                                    height: 180,width: 180,
                                     fit: BoxFit.cover,
                                   ),
                                 const Divider(height: 20, color: Colors.grey),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (gift.status != 'pledged')
-                                      IconButton(
-                                        icon: Icon(Icons.edit,
-                                            color: Colors.blue),
-                                        onPressed: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/myGiftDetails',
-                                            arguments: {
-                                              'giftId': gift.giftId
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    if (gift.status != 'pledged') // Only show delete button for non-pledged gifts
-                                      IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () async {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: const Text('Delete Gift'),
-                                              content: const Text('Are you sure you want to delete this Gift?'),
-                                              actions: [
-                                                TextButton(
-                                                  child: const Text('Cancel'),
-                                                  onPressed: () => Navigator.pop(context, false),
-                                                ),
-                                                TextButton(
-                                                  child: const Text('Delete'),
-                                                  onPressed: () => Navigator.pop(context, true),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-
-                                          if (confirm == true) {
-                                            await giftController.deleteGift(gift.giftId);
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                        content: Text('Gift deleted Successfully.')),
+                                if (event?.status != 'Past') // Hide buttons for past events
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      if (gift.status != 'pledged')
+                                        IconButton(
+                                          icon: Icon(Icons.edit,
+                                              color: Colors.blue),
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/myGiftDetails',
+                                              arguments: {
+                                                'giftId': gift.giftId
+                                              },
                                             );
-                                  }
-                                },
-                              ),
-                                  ],
-                                ),
+                                          },
+                                        ),
+                                      if (gift.status != 'pledged')
+                                        IconButton(
+                                          icon: const Icon(Icons.delete,
+                                              color: Colors.red),
+                                          onPressed: () async {
+                                            final confirm = await showDialog<
+                                                bool>(
+                                              context: context,
+                                              builder: (context) =>
+                                                  AlertDialog(
+                                                title:
+                                                    const Text('Delete Gift'),
+                                                content: const Text(
+                                                    'Are you sure you want to delete this Gift?'),
+                                                actions: [
+                                                  TextButton(
+                                                    child: const Text('Cancel'),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                  ),
+                                                  TextButton(
+                                                    child: const Text('Delete'),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+
+                                            if (confirm == true) {
+                                              await giftController
+                                                  .deleteGift(gift.giftId);
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Gift deleted Successfully.')),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),

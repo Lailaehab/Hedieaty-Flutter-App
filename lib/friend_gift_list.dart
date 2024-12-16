@@ -145,9 +145,9 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                       ),
                       const SizedBox(height: 8),
                       if (gift.imageUrl != null)
-                        Image.network(
+                        Image.asset(
                           gift.imageUrl!,
-                          height: 150,
+                          height: 180,width: 180,
                           fit: BoxFit.cover,
                         ),
                       const Divider(height: 20, color: Colors.grey),

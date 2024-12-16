@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:uuid/uuid.dart';
 import '../models/gift.dart';
 import '../controllers/gift_controller.dart';
-import '../reusable/image_utils.dart';
-import 'package:uuid/uuid.dart';
 import '../controllers/authentication_controller.dart';
+import '../reusable/image_utils.dart';
 
 class AddGiftPage extends StatefulWidget {
   final String eventId;
@@ -24,37 +23,49 @@ class _AddGiftPageState extends State<AddGiftPage> {
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  File? selectedImage;
-  String? imageUrl;
+  String? selectedImagePath; 
 
-  Future<void> _pickAndUploadImage(String giftId) async {
-    if (await ImageUtils.requestGalleryPermission()) {
-      final pickedImage = await ImageUtils.pickImageFromGallery();
-      if (pickedImage != null) {
-        final savedPath = await ImageUtils.saveGitfImageLocally(pickedImage, giftId);
-        if (savedPath != null) {
-          setState(() {
-            selectedImage = pickedImage;
-            imageUrl = savedPath;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image uploaded successfully!')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save the image locally.')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No image selected.')),
+  Future<void> _pickImageFromAssets() async {
+    String? selectedImage = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Select Gift Image"),
+          content: SingleChildScrollView(
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: ImageUtils.availableImages.map((imagePath) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop(imagePath);
+                  },
+                  child: Image.asset(
+                    imagePath,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
         );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gallery permission denied.')),
-      );
+      },
+    );
+
+    if (selectedImage != null) {
+      setState(() {
+        selectedImagePath = selectedImage;
+      });
     }
+  }
+
+  // Function to remove the selected image
+  void _removeImage() {
+    setState(() {
+      selectedImagePath = null; // Reset image selection
+    });
   }
 
   @override
@@ -74,7 +85,11 @@ class _AddGiftPageState extends State<AddGiftPage> {
           children: [
             Icon(Icons.add, color: Color.fromARGB(255, 111, 6, 120), size: 30),
             SizedBox(width: 8),
-            Text('Add Gift', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
+            Text('Add Gift',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 111, 6, 120))),
           ],
         ),
         backgroundColor: Colors.white,
@@ -89,9 +104,8 @@ class _AddGiftPageState extends State<AddGiftPage> {
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))
-                ),
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -134,8 +148,30 @@ class _AddGiftPageState extends State<AddGiftPage> {
               ),
               SizedBox(height: 20),
               Center(
-                child: selectedImage != null
-                    ? Image.file(selectedImage!, height: 150, fit: BoxFit.cover)
+                child: selectedImagePath != null
+                    ? Column(
+                        children: [
+                          Image.asset(selectedImagePath!,
+                              height: 150, fit: BoxFit.cover),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: _removeImage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:  Color.fromARGB(255, 0, 79, 170), 
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Remove Image',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 18),
+                            ),
+                          ),
+                        ],
+                      )
                     : Container(
                         width: 200,
                         height: 150,
@@ -146,18 +182,24 @@ class _AddGiftPageState extends State<AddGiftPage> {
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton.icon(
-                  onPressed: () => _pickAndUploadImage(Uuid().v4()),
-                  icon: Icon(Icons.upload,color: Colors.white,),
-                  label: Text('Upload Image',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: 22),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                        textStyle: TextStyle(fontSize: 25),
-                        backgroundColor:Color.fromARGB(255, 111, 6, 120), 
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),),
+                  onPressed: _pickImageFromAssets,
+                  icon: Icon(Icons.image, color: Colors.white),
+                  label: Text(
+                    'Select Image',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    textStyle: TextStyle(fontSize: 25),
+                    backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -173,21 +215,26 @@ class _AddGiftPageState extends State<AddGiftPage> {
                       price: double.tryParse(priceController.text) ?? 0.0,
                       status: 'available',
                       ownerId: userId,
-                      imageUrl: imageUrl,
+                      imageUrl: selectedImagePath,
                     );
                     giftController.createGift(newGift);
                     Navigator.pop(context);
                   },
-                  child: Text('Add Gift',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: 25),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                        textStyle: TextStyle(fontSize: 25),
-                        backgroundColor:Color.fromARGB(255, 111, 6, 120), 
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                  child: Text(
+                    'Add Gift',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    textStyle: TextStyle(fontSize: 25),
+                    backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),

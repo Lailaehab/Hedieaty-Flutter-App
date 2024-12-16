@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../reusable/image_utils.dart'; 
+import '../reusable/image_utils.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String userId;
@@ -17,10 +16,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  File? _profileImage;
-  String? _profilePictureUrl;
+  String? _profilePicturePath; // Stores the selected asset path
   bool _isLoading = false;
-  bool _isPasswordVisible = false;  // Variable to toggle password visibility
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -28,7 +26,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _fetchUserData();
   }
 
-  // Fetch user data from Firestore
   Future<void> _fetchUserData() async {
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -40,58 +37,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _nameController.text = userDoc['name'] ?? '';
           _emailController.text = userDoc['email'] ?? '';
           _phoneController.text = userDoc['phoneNumber'] ?? '';
-          _profilePictureUrl = userDoc['profilePicture']??'';
+          _profilePicturePath = userDoc['profilePicture'] ?? 'assets/default_profile.jpg';
         });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching user data: $e'))
+        SnackBar(content: Text('Error fetching user data: $e')),
       );
     }
   }
 
-  Future<void> _pickImage() async {
-    bool hasPermission = await ImageUtils.requestGalleryPermission();
-    if (!hasPermission) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gallery permission denied!'))
-      );
-      return;
-    }
+  Future<void> _pickImageFromAssets() async {
+    String? selectedImage = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Select Profile Picture"),
+          content: SingleChildScrollView(
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: ImageUtils.availableImages.map((imagePath) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop(imagePath);
+                  },
+                  child: Image.asset(
+                    imagePath,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
 
-    File? selectedImage = await ImageUtils.pickImageFromGallery();
     if (selectedImage != null) {
       setState(() {
-        _profileImage = selectedImage;
+        _profilePicturePath = selectedImage;
       });
     }
   }
 
-  // Save the profile image locally
-  Future<String?> _saveImageLocally(File image) async {
-    return await ImageUtils.saveImageLocally(image, widget.userId);
+  Future<void> _removeProfilePicture() async {
+    setState(() {
+      _profilePicturePath = null;
+    });
   }
 
-  // Update user profile in Firestore
   Future<void> _updateProfile() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      String? profileImagePath;
-
-      // Upload profile image if an image is selected
-      if (_profileImage != null) {
-        profileImagePath = await _saveImageLocally(_profileImage!);
-      }
-
-      // Update user data in Firestore
       await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
         'name': _nameController.text,
         'email': _emailController.text,
         'phoneNumber': _phoneController.text,
-        if (profileImagePath != null) 'profilePicture': profileImagePath,
+        'profilePicture': _profilePicturePath ?? null,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,19 +138,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _pickImageFromAssets,
                     child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _profileImage != null
-          ? FileImage(_profileImage!)
-          : (_profilePictureUrl != null
-          ? FileImage(File(_profilePictureUrl!))
-          : const AssetImage('assets/default_profile.png') as ImageProvider),
-  child: _profileImage == null && _profilePictureUrl == null
-      ? const Icon(Icons.person, size: 60, color: Colors.grey)
-      : null, 
+                      radius: 80,
+                      backgroundImage: _profilePicturePath != null && _profilePicturePath!.isNotEmpty
+                          ? AssetImage(_profilePicturePath!) as ImageProvider
+                          : const AssetImage('assets/default_profile.jpg'),
+                      child: _profilePicturePath == null
+                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          : null,
                     ),
                   ),
+                  const SizedBox(height: 16.0),
+                  _profilePicturePath != null
+                      ? ElevatedButton(
+                          onPressed: _removeProfilePicture,
+                          child: const Text('Remove Profile Picture', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 120, 120, 120),
+                            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: const Color.fromARGB(255, 62, 61, 61))
+                        ),
+                          ),
+                        )
+                      : Container(),
                   const SizedBox(height: 16.0),
                   TextField(
                     controller: _nameController,
@@ -168,7 +189,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 16.0),
-                  // New password field with visibility toggle
                   TextField(
                     controller: _newPasswordController,
                     obscureText: !_isPasswordVisible,
@@ -191,8 +211,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ElevatedButton(
                     onPressed: _updateProfile,
                     child: const Text('Save Changes',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                       textStyle: TextStyle(fontSize: 25),

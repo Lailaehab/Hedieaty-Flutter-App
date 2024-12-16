@@ -5,7 +5,6 @@ import 'package:hedieaty/controllers/gift_controller.dart';
 import 'controllers/authentication_controller.dart';
 import 'edit_profile.dart';
 import 'models/event.dart';
-import 'dart:io'; 
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -80,8 +79,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: CircleAvatar(
                     radius: 60,
                      backgroundImage: profilePictureUrl != null
-                            ? FileImage(File(profilePictureUrl!))
-                            : AssetImage("images/default_profile_picture.png") as ImageProvider,
+                            ? AssetImage(profilePictureUrl!) as ImageProvider
+                            : AssetImage("assets/default_profile.jpg") as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 10),
