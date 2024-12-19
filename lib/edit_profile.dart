@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hedieaty/services/database.dart';
 import '../reusable/image_utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String userId;
@@ -16,9 +17,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  String? _profilePicturePath; // Stores the selected asset path
+  String? _profilePicturePath;
   bool _isLoading = false;
   bool _isPasswordVisible = false;
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
@@ -28,17 +30,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _fetchUserData() async {
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId)
-          .get();
-      if (userDoc.exists) {
+      final List<Map<String, dynamic>> userData =
+          await _databaseHelper.getUsers();
+
+      // Find user by ID
+      final user = userData.firstWhere(
+        (element) => element['id'] == widget.userId,
+        orElse: () => {},
+      );
+
+      if (user.isNotEmpty) {
         setState(() {
-          _nameController.text = userDoc['name'] ?? '';
-          _emailController.text = userDoc['email'] ?? '';
-          _phoneController.text = userDoc['phoneNumber'] ?? '';
-          _profilePicturePath = userDoc['profilePicture'] ?? 'assets/default_profile.jpg';
+          _nameController.text = user['name'] ?? '';
+          _emailController.text = user['email'] ?? '';
+          _phoneController.text = user['phone_number'] ?? '';
+          _profilePicturePath =
+              user['profile_picture'] ?? 'assets/default_profile.jpg';
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found in the local database')),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,11 +107,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
+            // Update Firestore
       await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
         'name': _nameController.text,
         'email': _emailController.text,
         'phoneNumber': _phoneController.text,
-        'profilePicture': _profilePicturePath ?? null,
+        'profilePicture': _profilePicturePath ,
+      });
+      // Update Local SQLite Database
+      await _databaseHelper.updateUser(widget.userId, {
+        'id': widget.userId,
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone_number': _phoneController.text,
+        'profile_picture': _profilePicturePath,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,9 +143,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.edit, color: Color.fromARGB(255, 111, 6, 120), size: 30),
-            SizedBox(width: 8),
-            Text('Edit Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
+            const Icon(Icons.edit,
+                color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            const SizedBox(width: 8),
+            const Text(
+              'Edit Profile',
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 111, 6, 120)),
+            ),
           ],
         ),
         backgroundColor: Colors.white,
@@ -141,11 +169,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     onTap: _pickImageFromAssets,
                     child: CircleAvatar(
                       radius: 80,
-                      backgroundImage: _profilePicturePath != null && _profilePicturePath!.isNotEmpty
+                      backgroundImage: _profilePicturePath != null &&
+                              _profilePicturePath!.isNotEmpty
                           ? AssetImage(_profilePicturePath!) as ImageProvider
                           : const AssetImage('assets/default_profile.jpg'),
                       child: _profilePicturePath == null
-                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          ? const Icon(Icons.person,
+                              size: 60, color: Colors.grey)
                           : null,
                     ),
                   ),
@@ -153,14 +183,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   _profilePicturePath != null
                       ? ElevatedButton(
                           onPressed: _removeProfilePicture,
-                          child: const Text('Remove Profile Picture', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          child: const Text(
+                            'Remove Profile Picture',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15),
+                          ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 120, 120, 120),
-                            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            backgroundColor:
+                                const Color.fromARGB(255, 120, 120, 120),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
                             shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(color: const Color.fromARGB(255, 62, 61, 61))
-                        ),
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(
+                                  color: Color.fromARGB(255, 62, 61, 61)),
+                            ),
                           ),
                         )
                       : Container(),
@@ -197,7 +236,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {
@@ -211,11 +252,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ElevatedButton(
                     onPressed: _updateProfile,
                     child: const Text('Save Changes',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                      textStyle: TextStyle(fontSize: 25),
-                      backgroundColor: Color.fromARGB(255, 111, 6, 120),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 16),
+                      textStyle: const TextStyle(fontSize: 25),
+                      backgroundColor: const Color.fromARGB(255, 111, 6, 120),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

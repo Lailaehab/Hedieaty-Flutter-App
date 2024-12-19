@@ -147,7 +147,7 @@ class EditEvent extends StatelessWidget {
                     status: event.status,
                     location: _locationController.text,
                     date: timestamp,
-                    giftIds: event.giftIds,
+                    published: event.published,
                   );
 
                   // Update event status
@@ -161,7 +161,7 @@ class EditEvent extends StatelessWidget {
                   );
 
                   // Navigate back
-                  Navigator.pop(context);
+                  Navigator.pop(context, updatedEvent);
                 },
                 child: const Text('Save Changes', style: TextStyle(fontSize: 22,color: Colors.white)),
                 style: ElevatedButton.styleFrom(

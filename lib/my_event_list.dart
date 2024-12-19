@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/controllers/publishing_controller.dart';
 import '../controllers/event_controller.dart';
 import '../models/event.dart';
 import '../controllers/authentication_controller.dart';
@@ -14,9 +15,25 @@ class MyEventListPage extends StatefulWidget {
 class _MyEventListPageState extends State<MyEventListPage> {
   final EventController _eventController = EventController();
   final AuthController _authController = AuthController();
+  final PublishingController publishingController = PublishingController();
 
   SortOption _sortOption = SortOption.name; // Default sort by name
   bool _ascending = true; // Default sorting order: ascending
+
+  late Future<List<Event>> _eventsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEvents();
+  }
+
+  void _fetchEvents() {
+    final user = _authController.getCurrentUser();
+    if (user != null) {
+      _eventsFuture = _eventController.getDbEventsByUser(user.uid);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,23 +51,23 @@ class _MyEventListPageState extends State<MyEventListPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.event_available_outlined,
-                color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            Icon(Icons.event_available_outlined, color: Color.fromARGB(255, 111, 6, 120), size: 30),
             SizedBox(width: 8),
-            Text('My Events',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 111, 6, 120))),
+            Text('My Events', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 35),
-            onPressed: () {
-              Navigator.pushNamed(context, '/createEvent');
-            },
-          ),
+            onPressed: () async {
+    final newEvent = await Navigator.pushNamed(context, '/createEvent');
+    if (newEvent != null) {
+        setState(() {
+          _eventsFuture = _eventController.getDbEventsByUser(userId);
+        });
+    }
+  },
+),
           SortingUtils.buildSortMenu(
             sortOption: _sortOption,
             ascending: _ascending,
@@ -67,8 +84,8 @@ class _MyEventListPageState extends State<MyEventListPage> {
           ),
         ],
       ),
-      body: StreamBuilder<List<Event>>(
-        stream: _eventController.getEventsForUser(userId),
+      body: FutureBuilder<List<Event>>(
+        future: _eventController.getDbEventsByUser(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -87,25 +104,23 @@ class _MyEventListPageState extends State<MyEventListPage> {
             ascending: _ascending,
             getName: (event) => event.name,
             getCategory: (event) => event.category,
-            getStatus: (event) =>
-                _eventController.getEventStatus(event.date, event),
+            getStatus: (event) => _eventController.getEventStatus(event.date, event),
           );
 
           return ListView.builder(
             itemCount: sortedEvents.length,
             itemBuilder: (context, index) {
               final event = sortedEvents[index];
-              final eventStatus =
-                  _eventController.getEventStatus(event.date, event);
+              final eventStatus = _eventController.getEventStatus(event.date, event);
               final eventTime = _eventController.formatEventTime(event.date);
 
               return Card(
-                margin:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))),
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -122,70 +137,57 @@ class _MyEventListPageState extends State<MyEventListPage> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.category,
-                              color: Colors.grey[600], size: 18),
+                          Icon(Icons.category, color: Colors.grey[600], size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Category: ${event.category}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today,
-                              color: Colors.grey[600], size: 18),
+                          Icon(Icons.calendar_today, color: Colors.grey[600], size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Date: ${event.date.toDate().toString().split(' ')[0]}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.access_time,
-                              color: Colors.grey[600], size: 18),
+                          Icon(Icons.access_time, color: Colors.grey[600], size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Time: $eventTime',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.location_on,
-                              color: Colors.grey[600], size: 18),
+                          Icon(Icons.location_on, color: Colors.grey[600], size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Location: ${event.location}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.info,
-                              color: Colors.grey[600], size: 18),
+                          Icon(Icons.info, color: Colors.grey[600], size: 18),
                           const SizedBox(width: 6),
                           Text(
                             'Status: $eventStatus',
                             style: TextStyle(
                               fontSize: 14,
-                              color: eventStatus == 'Upcoming'
-                                  ? Colors.green
-                                  : eventStatus == 'Current'
-                                      ? Colors.blue
-                                      : Colors.red,
+                              color: eventStatus == 'Upcoming' ? Colors.green : eventStatus == 'Current' ? Colors.blue : Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -223,63 +225,76 @@ class _MyEventListPageState extends State<MyEventListPage> {
                               );
                             },
                           ),
-                          if (eventStatus != 'Past')
-                            Row(
-                              children: [
+                          if (event.published == 'false')
+                            ElevatedButton(
+                              onPressed: () async {
+                                await publishingController.publishEvent(event.eventId);
+                                setState(() {}); // Refresh the state to hide the button after publishing
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Publish',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              if (eventStatus != 'Past')
                                 IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      color: Colors.blue),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () async {
+                                    final updatedEvent = await Navigator.pushNamed(
                                       context,
                                       '/editEvent',
                                       arguments: {'event': event},
                                     );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                  onPressed: () async {
-                                    final confirm =
-                                        await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) =>
-                                          AlertDialog(
-                                        title: const Text('Delete Event'),
-                                        content: const Text(
-                                            'Are you sure you want to delete this event?'),
-                                        actions: [
-                                          TextButton(
-                                            child: const Text('Cancel'),
-                                            onPressed: () =>
-                                                Navigator.pop(
-                                                    context, false),
-                                          ),
-                                          TextButton(
-                                            child: const Text('Delete'),
-                                            onPressed: () =>
-                                                Navigator.pop(
-                                                    context, true),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirm == true) {
-                                      await _eventController
-                                          .deleteEvent(event.eventId);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Event deleted successfully')),
-                                      );
+                                    
+                                    if (updatedEvent != null) {
+                                      // Directly update the list with the updated event
+                                      setState(() {
+                                        _eventsFuture = _eventController.getDbEventsByUser(userId);
+                                      });
                                     }
                                   },
                                 ),
-                              ],
-                            ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete Event'),
+                                      content: const Text('Are you sure you want to delete this event?'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('Cancel'),
+                                          onPressed: () => Navigator.pop(context, false),
+                                        ),
+                                        TextButton(
+                                          child: const Text('Delete'),
+                                          onPressed: () => Navigator.pop(context, true),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirm == true) {
+                                    await _eventController.deleteEvent(event.eventId);
+                                    setState(() {}); // Refresh state after deletion
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Event deleted successfully')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ],

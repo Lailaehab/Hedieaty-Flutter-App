@@ -11,6 +11,7 @@ import '/reusable/nav_bar.dart';
 import '/models/user.dart';
 import '/models/event.dart';
 import 'reusable/search.dart';
+import 'controllers/publishing_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -52,6 +53,7 @@ class _HomePageContentState extends State<HomePageContent> {
   final AuthController authController = AuthController();
   final UserController userController = UserController();
   final FriendSearchController friendSearchController = FriendSearchController();
+  final PublishingController publishingController  =  PublishingController();
 
   String searchQuery = '';
 
@@ -87,8 +89,7 @@ class _HomePageContentState extends State<HomePageContent> {
           ),
           IconButton(
             onPressed: () async {
-              await authController.logOut();
-              Navigator.of(context).pushReplacementNamed('/signup');
+              await publishingController.showSyncAlertDialog( context, currentUserId);
             },
             icon: const Icon(Icons.logout, size: 32, color: Color.fromARGB(255, 111, 6, 120)),
           ),

@@ -51,4 +51,34 @@ class Gift {
       'ownerId':ownerId,
     };
   }
+
+ // Method to convert Gift object to Map for SQLite insertion
+  Map<String, dynamic> toMap() {
+    return {
+      'id': giftId,
+      'name': name,
+      'description': description,
+      'category': category,
+      'status': status,
+      'price': price,
+      'eventId': eventId,
+      'imageUrl': imageUrl,
+      'ownerId':ownerId,
+    };
+  }
+
+  // Factory method to create Gift from a Map (e.g., from SQLite query result)
+  factory Gift.fromMap(Map<String, dynamic> map) {
+    return Gift(
+      giftId: map['id'].toString(),
+      name: map['name'],
+      description: map['description'],
+      category: map['category'],
+      status: map['status'],
+      price: map['price'],
+      eventId: map['eventId'].toString(),
+      imageUrl: map['imageUrl'],
+      ownerId: map['ownerId'],
+    );
+  }
 }

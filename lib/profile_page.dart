@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty/controllers/event_controller.dart';
 import 'package:hedieaty/controllers/gift_controller.dart';
-import 'controllers/authentication_controller.dart';
+import 'package:hedieaty/controllers/authentication_controller.dart';
 import 'edit_profile.dart';
 import 'models/event.dart';
+import 'services/database.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -15,7 +15,29 @@ class _ProfilePageState extends State<ProfilePage> {
   final AuthController _authController = AuthController();
   final EventController eventController = EventController();
   final GiftController giftController = GiftController();
-  bool notificationsEnabled = true; 
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  bool notificationsEnabled = true;
+  Map<String, dynamic>? userData;
+  String profilePictureUrl = '';
+
+  Future<void> fetchUserData(String userId) async {
+    userData = await _dbHelper.getUserById(userId);
+    if (userData != null) {
+      notificationsEnabled = (userData!['notificationsEnabled'] ?? 1) == 1;
+      profilePictureUrl = userData!['profile_picture'] ?? '';
+    }
+  }
+
+  Future<List<Event>> fetchUserEvents(String userId) async {
+    return await _dbHelper.getEventsByUserId(userId);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchGiftsForEvent(String eventId) async {
+    return (await _dbHelper.getGiftsByEventId(eventId))
+        .map((gift) => gift.toMap())
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,33 +50,34 @@ class _ProfilePageState extends State<ProfilePage> {
     }
     final userId = user.uid;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.person_2_outlined, color: Color.fromARGB(255, 111, 6, 120), size: 30),
-            const SizedBox(width: 8),
-            const Text('My Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 111, 6, 120))),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: StreamBuilder<DocumentSnapshot>(
-         stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('Error fetching user data'));
-          }
+    return FutureBuilder<void>(
+      future: fetchUserData(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || userData == null) {
+          return const Center(child: Text('Error fetching user data'));
+        }
 
-          final userData = snapshot.data!.data() as Map<String, dynamic>;
-          notificationsEnabled = userData['notificationsEnabled'] ?? true;
-          final profilePictureUrl = userData['profilePicture'] ?? ''; 
-
-          return SingleChildScrollView(
+        return Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Icon(Icons.person_2_outlined,
+                    color: Color.fromARGB(255, 111, 6, 120), size: 30),
+                const SizedBox(width: 8),
+                const Text('My Profile',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 111, 6, 120))),
+              ],
+            ),
+            backgroundColor: Colors.white,
+            centerTitle: true,
+          ),
+          body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -65,27 +88,29 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   value: notificationsEnabled,
-                  onChanged: (bool value) {
+                  onChanged: (bool value) async {
                     setState(() {
-                      notificationsEnabled = value; 
+                      notificationsEnabled = value;
                     });
-                    FirebaseFirestore.instance.collection('users').doc(userId).update({
-                      'notificationsEnabled': value,
-                    });
+                    // Clone userData to a mutable map and update the value
+                    final updatedUserData = Map<String, dynamic>.from(userData!);
+                    updatedUserData['notificationsEnabled'] = value ? 1 : 0;
+                    await _dbHelper.updateUser(userId, updatedUserData);
+                    userData = updatedUserData;
                   },
                   activeColor: Colors.green,
                 ),
                 Center(
                   child: CircleAvatar(
                     radius: 60,
-                     backgroundImage: profilePictureUrl != null
-                            ? AssetImage(profilePictureUrl!) as ImageProvider
-                            : AssetImage("assets/default_profile.jpg") as ImageProvider,
+                    backgroundImage: profilePictureUrl.isNotEmpty
+                        ? AssetImage(profilePictureUrl) as ImageProvider
+                        : AssetImage("assets/default_profile.jpg") as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  userData['name'] ?? 'User Name',
+                  userData!['name'] ?? 'User Name',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -103,15 +128,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   child: const Text(
                     'Edit Profile',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
                     textStyle: const TextStyle(fontSize: 20),
                     backgroundColor: Color.fromARGB(255, 111, 6, 120),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color:Color.fromARGB(255, 69, 0, 77),width: 3 )
+                      side: BorderSide(
+                          color: Color.fromARGB(255, 69, 0, 77), width: 3),
                     ),
                   ),
                 ),
@@ -129,16 +157,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      StreamBuilder<List<Event>>(
-                        stream: eventController.getEventsForUser(userId),
+                      FutureBuilder<List<Event>>(
+                        future: fetchUserEvents(userId),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
-                          if (snapshot.hasError) {
-                            return Center(child: Text('Error: ${snapshot.error}'));
-                          }
-                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          if (snapshot.hasError ||
+                              !snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
                             return const Center(child: Text('No events found.'));
                           }
 
@@ -150,39 +179,54 @@ class _ProfilePageState extends State<ProfilePage> {
                             itemBuilder: (context, index) {
                               final event = events[index];
                               return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 10),
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 10),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                                  side: BorderSide(
+                                      color: Color.fromARGB(255, 111, 6, 120)),
                                 ),
                                 child: ExpansionTile(
-                                  title: Text(event.name , style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                  subtitle: Text(event.status , style: const TextStyle(fontSize: 14)),
+                                  title: Text(event.name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18)),
+                                  subtitle: Text(event.status,
+                                      style: const TextStyle(fontSize: 14)),
                                   children: [
-                                    StreamBuilder<List<Map<String, dynamic>>>( 
-                                      stream: giftController.getGiftsForEvent(event.eventId),
+                                    FutureBuilder<
+                                        List<Map<String, dynamic>>>(
+                                      future: fetchGiftsForEvent(event.eventId),
                                       builder: (context, snapshot) {
-                                        if (snapshot.connectionState == ConnectionState.waiting) {
-                                          return Center(child: CircularProgressIndicator());
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
                                         }
-                                        if (snapshot.hasError) {
-                                          return Center(child: Text('Error: ${snapshot.error}'));
-                                        }
-                                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                          return Center(child: Text('No gifts found for this event.'));
+                                        if (snapshot.hasError ||
+                                            !snapshot.hasData ||
+                                            snapshot.data!.isEmpty) {
+                                          return Center(
+                                              child: Text(
+                                                  'No gifts found for this event.'));
                                         }
 
                                         final gifts = snapshot.data!;
                                         return ListView.builder(
                                           shrinkWrap: true,
-                                          physics: const NeverScrollableScrollPhysics(),
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
                                           itemCount: gifts.length,
                                           itemBuilder: (context, index) {
                                             final gift = gifts[index];
                                             return ListTile(
-                                              leading: const Icon(Icons.card_giftcard),
-                                              title: Text(gift['name'] ?? 'Gift Name'),
-                                              subtitle: Text('Status: ${gift['status'] ?? 'Unknown'}'),
+                                              leading: const Icon(
+                                                  Icons.card_giftcard),
+                                              title: Text(
+                                                  gift['name'] ?? 'Gift Name'),
+                                              subtitle: Text(
+                                                  'Status: ${gift['status'] ?? 'Unknown'}'),
                                             );
                                           },
                                         );
@@ -200,9 +244,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

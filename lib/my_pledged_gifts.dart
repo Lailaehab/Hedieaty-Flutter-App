@@ -159,7 +159,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                           ),
                           const SizedBox(height: 8),
                           if (gift['image'] != null)
-                            Image.network(
+                            Image.asset(
                               gift['image'],
                               height: 150,
                               fit: BoxFit.cover,

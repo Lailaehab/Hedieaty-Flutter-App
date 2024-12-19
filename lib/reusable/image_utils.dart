@@ -9,6 +9,9 @@ class ImageUtils {
      'assets/profile_picture3.jpg',
      'assets/profile_picture4.jpg',
      'assets/default_profile.jpg',
+     'assets/perfume.jpg',
+     'assets/laptop.jpg',
+     'assets/gift2.jpg',
   ];
   
 }

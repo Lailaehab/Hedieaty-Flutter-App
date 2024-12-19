@@ -74,8 +74,8 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
           ? Center(child: CircularProgressIndicator())
           : event == null
               ? Center(child: Text('Event not found.'))
-              : StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: giftController.getGiftsForEvent(widget.eventId),
+              : FutureBuilder<List<Gift>>(
+                  future: giftController.getGifts(widget.eventId),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
@@ -92,18 +92,16 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                       items: gifts,
                       sortOption: _sortOption,
                       ascending: _ascending,
-                      getName: (gift) => gift['name'],
-                      getCategory: (gift) => gift['category'],
-                      getStatus: (gift) => gift['status'],
+                      getName: (gift) => gift.name,
+                      getCategory: (gift) => gift.category,
+                      getStatus: (gift) => gift.status,
                     );
 
                     return ListView.builder(
                       itemCount: sortedGifts.length,
                       itemBuilder: (context, index) {
-                        final gift = Gift.fromFirestore(
-                          sortedGifts[index]['id'],
-                          sortedGifts[index],
-                        );
+                        final gift = sortedGifts[index];
+                        
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               vertical: 8, horizontal: 16),
@@ -208,12 +206,13 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                           icon: Icon(Icons.edit,
                                               color: Colors.blue),
                                           onPressed: () {
+                                             print('giftId:### ${gift.giftId}');
                                             Navigator.pushNamed(
                                               context,
                                               '/myGiftDetails',
-                                              arguments: {
-                                                'giftId': gift.giftId
-                                              },
+                                              arguments: 
+                                                {'gift': gift}
+                                              ,
                                             );
                                           },
                                         ),

@@ -206,17 +206,24 @@ class _AddGiftPageState extends State<AddGiftPage> {
               Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    final newGift = Gift(
-                      giftId: Uuid().v4(),
-                      eventId: widget.eventId,
-                      name: nameController.text,
-                      description: descriptionController.text,
-                      category: categoryController.text,
-                      price: double.tryParse(priceController.text) ?? 0.0,
-                      status: 'available',
-                      ownerId: userId,
-                      imageUrl: selectedImagePath,
-                    );
+                    if (nameController.text.isEmpty ||
+        descriptionController.text.isEmpty ||
+        categoryController.text.isEmpty ||
+        priceController.text.isEmpty)  {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields.')),
+      );
+      return;}
+                    final newGift = {
+                      'eventId': widget.eventId,
+                      'name': nameController.text,
+                      'description': descriptionController.text,
+                      'category': categoryController.text,
+                      'price': double.tryParse(priceController.text) ?? 0.0,
+                      'status': 'available',
+                      'ownerId': userId,
+                      'imageUrl': selectedImagePath,
+                    };
                     giftController.createGift(newGift);
                     Navigator.pop(context);
                   },

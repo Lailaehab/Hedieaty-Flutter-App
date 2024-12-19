@@ -5,10 +5,12 @@ import '../controllers/event_controller.dart';
 import '../models/event.dart';
 import '../controllers/authentication_controller.dart';
 import 'package:intl/intl.dart';
+import 'services/database.dart';
 
 class CreateEvent extends StatelessWidget {
-  final EventController _eventController = EventController();
+  // final EventController _eventController = EventController();
   final AuthController _authController = AuthController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   // Controllers for form fields
   final TextEditingController _nameController = TextEditingController();
@@ -141,7 +143,7 @@ class CreateEvent extends StatelessWidget {
                     timeOfDay.hour,
                     timeOfDay.minute,
                   );
-                  final timestamp = Timestamp.fromDate(dateTime);
+                  // final timestamp = Timestamp.fromDate(dateTime);
 
                   // Get the logged-in user's ID
                   final user = _authController.getCurrentUser();
@@ -154,26 +156,34 @@ class CreateEvent extends StatelessWidget {
 
                   final userId = user.uid;
 
-                  // Create a new Event
-                  final event = Event(
-                    eventId: const Uuid().v4(),
-                    userId: userId,
-                    name: _nameController.text,
-                    category: _categoryController.text,
-                    status: 'Upcoming', // Default status
-                    location: _locationController.text,
-                    date: timestamp,
-                    giftIds: [], // No gifts initially
-                  );
+                  final event = {
+                    'name': _nameController.text,
+                    'date': dateTime.toIso8601String(),
+                    'location': _locationController.text,
+                    'category': _categoryController.text,
+                    'userId': userId, 
+                    'status': 'Upcoming',
+                    'published':'false',
+                  };
 
-                  // Save the event using the controller
-                  await _eventController.saveEvent(event);
+                  final eventid= await _databaseHelper.insertEvent(event);
+
+                  final new_event = (
+                    eventId:eventid,
+                    name: _nameController.text,
+                    date: dateTime.toIso8601String(),
+                    location: _locationController.text,
+                    category: _categoryController.text,
+                    userId: userId, 
+                    status: 'Upcoming',
+                    published:'false',
+                  );
 
                   // Notify user and go back
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Event created successfully')),
                   );
-                  Navigator.pop(context);
+                  Navigator.pop(context, new_event);
                 },
                 child: const Text('Create Event', style: TextStyle(fontSize: 22,color: Colors.white)),
                 style: ElevatedButton.styleFrom(

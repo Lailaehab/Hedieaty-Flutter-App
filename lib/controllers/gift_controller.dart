@@ -1,9 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hedieaty/controllers/authentication_controller.dart';
+import 'package:hedieaty/controllers/event_controller.dart';
+import 'package:hedieaty/main.dart';
+import 'package:hedieaty/models/event.dart';
 import 'package:hedieaty/models/gift.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hedieaty/services/database.dart';
+import 'package:hedieaty/services/user_manager.dart';
 
 class GiftController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final EventController _eventController =EventController();
+  final AuthController _authController = AuthController();
 
 Stream<List<Map<String, dynamic>>> getGiftsForEvent(String eventId) {
   return _firestore
@@ -14,30 +23,68 @@ Stream<List<Map<String, dynamic>>> getGiftsForEvent(String eventId) {
           querySnapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList());
 }
 
-  Future<Map<String, dynamic>?> getGiftById(String giftId) async {
-    final docSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+Future<List<Gift>> getGifts(String eventId){
+  return  _databaseHelper.getGiftsByEventId(eventId);
+}
 
-    if (docSnapshot.exists) {
-      return {...docSnapshot.data()!, 'id': docSnapshot.id};
-    } else {
-      return null; 
+  Future<Map<String, dynamic>?> getGiftById(String giftId) async {
+    // final docSnapshot = await _firestore.collection('gifts').doc(giftId).get();
+
+    // if (docSnapshot.exists) {
+    //   return {...docSnapshot.data()!, 'id': docSnapshot.id};
+    // } else {
+    //   return null; 
+    // }
+    return _databaseHelper.getGiftById(giftId);
+  }
+
+  Future<void> createGift(Map<String, dynamic> gift) async {
+    int giftId = await _databaseHelper.insertGift(gift);
+    String ownerId = gift['ownerId'];
+    print("######### gift ownerId: $ownerId");
+    final  event = await _eventController.getEvent(gift['eventId']);
+    if (event == null) {
+        print('Event not found for ID: ${gift['eventId']}');
+        return;
+      }
+      print('Event published status: ${event.published}');
+    if (event.published == 'true'){
+      try {
+            await FirebaseFirestore.instance
+                .collection('gifts')
+                .doc(giftId.toString())
+                .set(gift);
+            print('Gift successfully added to Firebase');
+          } catch (e) {
+            print('Error adding gift to Firebase: $e');
+          }
+              }
+  }
+
+  Future<void> updateGift(Gift gift) async {
+    await _databaseHelper.updateGift(gift);
+    final  event = await _eventController.getEvent(gift.eventId);
+    if(event?.published == 'true'){
+      await _firestore.collection('gifts').doc(gift.giftId).update(gift.toFirestore());
     }
   }
 
-  Future<void> createGift(Gift gift) async {
-    await FirebaseFirestore.instance
-        .collection('gifts')
-        .doc(gift.giftId)
-        .set(gift.toFirestore());
-  }
-
-  Future<void> updateGift(String giftId, Map<String, dynamic> data) async {
-    await _firestore.collection('gifts').doc(giftId).update(data);
-  }
-
   Future<void> deleteGift(String giftId) async {
-    await _firestore.collection('gifts').doc(giftId).delete();
-  }
+    await _databaseHelper.deleteGift(giftId);
+    // final gift = await _databaseHelper.getGiftById(giftId);
+    //  final  event = await _eventController.getEvent(gift['eventId']);
+    //     if (event == null) {
+    //     print('Event not found for ID: ${gift['eventId']}');
+    //     return;
+    //   }
+    //   print('Event published status: ${event.published}');
+
+     try {
+      await _firestore.collection('gifts').doc(giftId).delete();
+    } catch (e) {
+      print('Error deleting gift: $e');
+    }
+    }
 
   Future<String> getGiftOwner(String giftId) async {
     final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
@@ -65,6 +112,7 @@ Future<void> pledgeGift(String giftId, String pledgedBy) async {
 
   final giftSnapshot = await _firestore.collection('gifts').doc(giftId).get();
   final giftData = giftSnapshot.data()!;
+  final giftName = giftData['name'];
   final eventId = giftData['eventId'];
 
   final eventSnapshot = await _firestore.collection('events').doc(eventId).get();
@@ -84,13 +132,25 @@ Future<void> pledgeGift(String giftId, String pledgedBy) async {
     'pledgedGifts': FieldValue.arrayUnion([giftId]),
   });
 
-  await _firestore.collection('notifications').add({
-    'userId': eventOwnerId,
-    'title': 'Gift Pledged',
-    'message': 'Hey $eventOwnerName, $currentUserName pledged to buy "${giftData['name']}" from the event "$eventName.',
-    'timestamp': FieldValue.serverTimestamp(),
-    'read': false,
-  });
+    // Notifying the creator of the gift
+    String? fcmToken = await _authController.getFcmToken(eventOwnerId);
+    UserManager.fcmService!.sendNotification(
+      fcmToken: fcmToken!,
+      title: 'Gift Pledged by $currentUserName !',
+      body: '''$currentUserName has pledged your gift '$giftName' for the event $eventName! 🎉''',
+      data: {
+        'giftId': giftId,
+        'status': 'pledged',
+      }
+    );
+    print('########################### Sentt');
+  // await _firestore.collection('notifications').add({
+  //   'userId': eventOwnerId,
+  //   'title': 'Gift Pledged',
+  //   'message': 'Hey $eventOwnerName, $currentUserName pledged to buy "${giftData['name']}" from the event "$eventName.',
+  //   'timestamp': FieldValue.serverTimestamp(),
+  //   'read': false,
+  // });
 }
 
   Future<void> unpledgeGift(String giftId, String userId) async {
@@ -112,6 +172,7 @@ Future<void> pledgeGift(String giftId, String pledgedBy) async {
     final currentUserName = currentUserSnapshot.data()?['name'] ?? 'Unknown User';
 
     final giftData = giftSnapshot.data()!;
+    final giftName = giftData['name'];
     final eventId = giftData['eventId'];
 
     final eventSnapshot = await _firestore.collection('events').doc(eventId).get();
@@ -131,13 +192,26 @@ Future<void> pledgeGift(String giftId, String pledgedBy) async {
       'pledgedGifts': FieldValue.arrayRemove([giftId]),
     });
 
-    await _firestore.collection('notifications').add({
-      'userId': eventOwnerId,
-      'title': 'Gift Unpledged',
-      'message': 'Hey $eventOwnerName, $currentUserName unpledged "${giftData['name']}" from the event "$eventName.',
-      'timestamp': FieldValue.serverTimestamp(),
-      'read': false,
-    });
+        // Notifying the creator of the gift
+    String? fcmToken = await _authController.getFcmToken(eventOwnerId);
+    await UserManager.fcmService!.sendNotification(
+      fcmToken: fcmToken!,
+      title: 'Gift Un-Pledged by $currentUserName !',
+      body: '''$currentUserName has un-pledged your gift '$giftName' for the event $eventName! 😢''',
+      data: {
+        'giftId': giftId,
+        'status': 'available',
+      }
+    );
+    print('########################### Sentt');
+
+    // await _firestore.collection('notifications').add({
+    //   'userId': eventOwnerId,
+    //   'title': 'Gift Unpledged',
+    //   'message': 'Hey $eventOwnerName, $currentUserName unpledged "${giftData['name']}" from the event "$eventName.',
+    //   'timestamp': FieldValue.serverTimestamp(),
+    //   'read': false,
+    // });
 
     print("Gift unpledged successfully.");
   }

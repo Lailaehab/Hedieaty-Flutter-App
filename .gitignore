@@ -44,3 +44,4 @@ app.*.map.json
 
 # Exclude Firebase options file
 firebase_options.dart
+hedieaty-d79be-firebase-adminsdk-cg8cr-c0d6179fe9.json
