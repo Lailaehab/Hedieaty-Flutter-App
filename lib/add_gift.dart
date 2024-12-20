@@ -140,7 +140,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                     ? Column(
                         children: [
                           Text(
-                            'Image Selected and Compressed',
+                            'Image Selected',
                             style: TextStyle(color: Colors.green),
                           ),
                           SizedBox(height: 10),

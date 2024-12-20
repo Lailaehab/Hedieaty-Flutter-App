@@ -120,9 +120,9 @@ class _HomePageContentState extends State<HomePageContent> {
                 backgroundColor: Color.fromARGB(255, 252, 215, 255),
                 padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(22),
                   side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
-                ),
+                ),shadowColor: Colors.black, elevation: 10,
               ),
             ),
           ),
@@ -132,8 +132,11 @@ class _HomePageContentState extends State<HomePageContent> {
               decoration: InputDecoration(
                 hintText: 'Search Friends',
                 prefixIcon: Icon(Icons.search, color:  Color.fromARGB(255, 111, 6, 120)),
+                filled: true,
+                fillColor: const Color.fromARGB(255, 252, 215, 255),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(22),
+                  borderSide: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
                 ),
               ),
               onChanged: (value) {
@@ -197,7 +200,7 @@ class _HomePageContentState extends State<HomePageContent> {
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(22),
                             side: BorderSide(color: Color.fromARGB(255, 111, 6, 120))
                           ),
                           elevation: 5,

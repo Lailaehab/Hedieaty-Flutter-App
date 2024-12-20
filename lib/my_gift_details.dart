@@ -205,7 +205,7 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                       ? Column(
                           children: [
                             const Text(
-                              'Image Selected and Compressed',
+                              'Image Selected',
                               style: TextStyle(color: Colors.green),
                             ),
                             const SizedBox(height: 10),

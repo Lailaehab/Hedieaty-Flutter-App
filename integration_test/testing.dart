@@ -40,21 +40,15 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     // Step 6: Select 'View Gifts' button for the first event
-   final listViewFinder = find.byType(ListView);
-    expect(listViewFinder, findsOneWidget);
+await tester.pumpAndSettle(const Duration(seconds: 5)); // Allow stream to resolve
 
-    // Wait for the ListView to build and populate
-    await tester.pumpAndSettle();
+final viewGiftsButton = find.widgetWithText(ElevatedButton, "View Gifts");
+expect(viewGiftsButton, findsOneWidget); // Adjust based on number of buttons expected
+await tester.tap(viewGiftsButton);
+await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    final viewGiftsButton = find.descendant(
-      of: listViewFinder,
-      matching: find.widgetWithText(ElevatedButton, "View Gifts"),
-    );
-
-    expect(viewGiftsButton, findsWidgets); // Expect multiple "View Gifts" buttons
-    await tester.ensureVisible(viewGiftsButton.first); // Ensure the first button is visible
-    await tester.tap(viewGiftsButton.first);
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    // Verify navigation to the gifts list screen
+    expect(find.text("Gifts For Event"), findsWidgets);
 
     // Step 7: Tap the 'Pledge' button
     final pledgeButton = find.widgetWithText(ElevatedButton, "Pledge Gift").first;

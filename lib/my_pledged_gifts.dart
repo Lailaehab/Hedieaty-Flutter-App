@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'controllers/authentication_controller.dart';
@@ -45,11 +47,20 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
     final userId = user.uid;
 
     return Scaffold(
-      appBar: AppBar(title: Row(
+      appBar: AppBar(
+        title: Row(
           children: [
-            Icon(Icons.card_giftcard_outlined, color:  Color.fromARGB(255, 111, 6, 120), size: 30),
-            SizedBox(width: 8), 
-            Text('My Pledged Gifts', style: TextStyle(fontSize: 24,fontWeight: FontWeight.bold, color:  Color.fromARGB(255, 111, 6, 120))),],),),
+            Icon(Icons.card_giftcard_outlined,
+                color: Color.fromARGB(255, 111, 6, 120), size: 30),
+            SizedBox(width: 8),
+            Text('My Pledged Gifts',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 111, 6, 120))),
+          ],
+        ),
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _pledgedGiftsFuture,
         builder: (context, snapshot) {
@@ -87,7 +98,7 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color:  Color.fromARGB(255, 111, 6, 120))
+                      side: BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -105,62 +116,83 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.person, color: Colors.grey[600], size: 18),
+                              Icon(Icons.person,
+                                  color: Colors.grey[600], size: 18),
                               const SizedBox(width: 6),
-                              Text(
-                                'Friend: ${gift['Friend']}',
-                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              Expanded(
+                                child: Text(
+                                  'Friend: ${gift['Friend']}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.category, color: Colors.grey[600], size: 18),
+                              Icon(Icons.category,
+                                  color: Colors.grey[600], size: 18),
                               const SizedBox(width: 6),
-                              Text(
-                                'Category: ${gift['category']}',
-                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              Expanded(
+                                child: Text(
+                                  'Category: ${gift['category']}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.monetization_on, color: Colors.grey[600], size: 18),
+                              Icon(Icons.monetization_on,
+                                  color: Colors.grey[600], size: 18),
                               const SizedBox(width: 6),
                               Text(
                                 'Price: \$${gift['price']}',
-                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                style: const TextStyle(
+                                    fontSize: 14, color: Colors.grey),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.description, color: Colors.grey[600], size: 18),
+                              Icon(Icons.description,
+                                  color: Colors.grey[600], size: 18),
                               const SizedBox(width: 6),
-                              Text(
-                                'Description: ${gift['description']}',
-                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              Expanded(
+                                child: Text(
+                                  'Description: ${gift['description']}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                  softWrap: true,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, color: Colors.grey[600], size: 18),
+                              Icon(Icons.calendar_today,
+                                  color: Colors.grey[600], size: 18),
                               const SizedBox(width: 6),
                               Text(
                                 'Due Date: ${DateFormat('yyyy-MM-dd').format(dueDate.toLocal())}',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          if (gift['image'] != null)
-                            Image.asset(
-                              gift['image'],
+                          if (gift['imageUrl'] != null)
+                            Image.memory(base64Decode(gift['imageUrl']!),
                               height: 150,
                               fit: BoxFit.cover,
                             ),
@@ -169,13 +201,17 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                             Center(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  await _giftController.unpledgeGift(gift['id'], userId);
+                                  await _giftController.unpledgeGift(
+                                      gift['id'], userId);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Gift unpledged successfully.')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Gift unpledged successfully.')),
                                   );
                                   _refreshPledgedGifts();
                                 },
-                                icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 30),
+                                icon: const Icon(Icons.remove_circle_outline,
+                                    color: Colors.white, size: 30),
                                 label: const Text(
                                   'Unpledge Gift',
                                   style: TextStyle(
@@ -184,11 +220,16 @@ class _MyPledgedGiftsPageState extends State<MyPledgedGiftsPage> {
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromARGB(255, 132, 0, 147),
-                                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 132, 0, 147),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    side: BorderSide(color:Color.fromARGB(204, 95, 0, 106),width: 3 )
+                                    side: BorderSide(
+                                        color:
+                                            Color.fromARGB(204, 95, 0, 106),
+                                        width: 3),
                                   ),
                                 ),
                               ),

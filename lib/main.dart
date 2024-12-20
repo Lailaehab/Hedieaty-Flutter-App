@@ -33,24 +33,6 @@ void main() async {
   FCMService? fcmServiceInstance = await FCMService.initialize();
   UserManager.updateFCMService(fcmServiceInstance);
 
-  // await FirebaseApi().initNotification();
-    // AuthController authController = AuthController();
-
-    // final user = authController.getCurrentUser();
-    // if (user == null) {
-    //   runApp(MaterialApp(
-    //         debugShowCheckedModeBanner: false,
-    //         home: LoginPage(),)
-    //   );
-    // }
-    // else{
-    // final UserId = user.uid;}
-  // FirestoreSyncController syncController = FirestoreSyncController(userId:UserId);
-  // syncController.startSyncing();
-  // FirebaseMessaging messaging = FirebaseMessaging.instance;
-  // await messaging.requestPermission();
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   runApp(HedieatyApp());
 }
 

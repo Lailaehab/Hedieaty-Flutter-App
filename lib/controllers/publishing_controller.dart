@@ -10,12 +10,9 @@ Future<void> syncEventsAndGiftsToFirestore(String userId) async {
   final db = await DatabaseHelper().database;
 
   try {
-    // Fetch all events from local database
     List<Map<String, dynamic>> events = await db.query('Events', where: 'user_id = ?', whereArgs: [userId]);
-
-    // Upload events to Firestore
     for (var event in events) {
-      String eventId = event['id']; //'id' is the event primary key
+      String eventId = event['id']; 
 
       await FirebaseFirestore.instance.collection('events').doc(eventId).set({
         'eventId': eventId,
@@ -27,10 +24,8 @@ Future<void> syncEventsAndGiftsToFirestore(String userId) async {
         'date': event['date'],
       });
 
-      // Fetch gifts related to this event
       List<Map<String, dynamic>> gifts = await db.query('Gifts', where: 'event_id = ?', whereArgs: [eventId]);
 
-      // Upload gifts to Firestore
       for (var gift in gifts) {
         String giftId = gift['id'];
         await FirebaseFirestore.instance.collection('gifts').doc(giftId).set({
@@ -42,7 +37,7 @@ Future<void> syncEventsAndGiftsToFirestore(String userId) async {
           'status': gift['status'],
           'eventId': eventId,
           'imageUrl': gift['imageUrl'],
-          'pledgedBy': null, // Default
+          'pledgedBy': null, 
           'ownerId': userId,
         });
       }
@@ -59,7 +54,7 @@ Future<void> syncEventsAndGiftsToFirestore(String userId) async {
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text('Save Data'),
-        content: Text('Do you want to save your events and gifts to Firestore before logging out?'),
+        content: Text('Do you want to save your events and gifts before logging out?'),
         actions: <Widget>[
           TextButton(
             child: Text('Cancel'),
@@ -79,24 +74,20 @@ Future<void> syncEventsAndGiftsToFirestore(String userId) async {
   );
 }
 
-// Function to publish a single event and its gifts to Firestore
 Future<void> publishEvent( String eventId) async {
   final db = await DatabaseHelper().database;
   try {
-    //Fetch the event from the local database using its ID
     List<Map<String, dynamic>> eventResult = await db.query(
       'Events',
       where: 'id = ?',
       whereArgs: [eventId],
     );
 
-    // Check if the event exists
     if (eventResult.isEmpty) {
       print("Event not found in the local database.");
       return;
     }
 
-    // Extract the event data
     var event = eventResult.first;
 
         await db.update(
@@ -108,7 +99,6 @@ Future<void> publishEvent( String eventId) async {
     print("Event 'published' field updated in local database.");
 
 
-    //  Upload the event to Firestore
     await FirebaseFirestore.instance.collection('events').doc(eventId).set({
       'userId': event['userId'],
       'name': event['name'],
@@ -121,14 +111,12 @@ Future<void> publishEvent( String eventId) async {
 
     print("Event uploaded successfully: $eventId");
 
-    // Fetch all gifts associated with this event
     List<Map<String, dynamic>> giftsResult = await db.query(
       'Gifts',
       where: 'eventId = ?',
       whereArgs: [eventId],
     );
 
-    // Upload each gift to Firestore
     for (var gift in giftsResult) {
       String giftId = gift['id'].toString();
 
@@ -140,7 +128,7 @@ Future<void> publishEvent( String eventId) async {
         'status': gift['status'],
         'eventId': eventId,
         'imageUrl': gift['imageUrl'],
-        'pledgedBy': null, // Default value for pledgedBy
+        'pledgedBy': null,
       });
 
       print("Gift uploaded successfully: $giftId");
