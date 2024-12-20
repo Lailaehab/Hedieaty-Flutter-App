@@ -4,6 +4,7 @@ import '/controllers/event_controller.dart';
 import '/models/gift.dart';
 import '/models/event.dart';
 import 'reusable/sorting_utils.dart';
+import 'dart:convert';
 
 class MyGiftListPage extends StatefulWidget {
   final String eventId;
@@ -18,35 +19,42 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
   SortOption _sortOption = SortOption.name; // Default sort by name
   bool _ascending = true; // Default sorting order: ascending
   EventController eventController = EventController();
-  Event? event; // Store the event details
-  bool isLoading = true; // Flag to indicate loading state
+  final GiftController giftController = GiftController();
+  Event? event; 
+  bool isLoading = true; 
+  late Future<List<Gift>> _gifts;
 
   @override
   void initState() {
     super.initState();
-    _fetchEventDetails(); // Fetch event details on initialization
+    _fetchEventDetails();
   }
 
   Future<void> _fetchEventDetails() async {
     final fetchedEvent = await eventController.getEvent(widget.eventId);
+    _gifts = giftController.getGifts(widget.eventId);
     setState(() {
       event = fetchedEvent;
       isLoading = false;
     });
   }
 
+  void _refreshGiftList() {
+    setState(() {
+      _gifts = giftController.getGifts(widget.eventId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final GiftController giftController = GiftController();
-
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
             Icon(Icons.card_giftcard_outlined,
-                color: Color.fromARGB(255, 111, 6, 120), size: 23),
-            SizedBox(width: 1),
-            Text('Gifts For Event',
+                color: const Color.fromARGB(255, 111, 6, 120), size: 23),
+            const SizedBox(width: 1),
+            const Text('Gifts For Event',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -71,20 +79,21 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : event == null
-              ? Center(child: Text('Event not found.'))
+              ? const Center(child: Text('Event not found.'))
               : FutureBuilder<List<Gift>>(
-                  future: giftController.getGifts(widget.eventId),
+                  future: _gifts,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(child: Text('No gifts found for this event.'));
+                      return const Center(
+                          child: Text('No gifts found for this event.'));
                     }
 
                     final gifts = snapshot.data!;
@@ -101,14 +110,14 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                       itemCount: sortedGifts.length,
                       itemBuilder: (context, index) {
                         final gift = sortedGifts[index];
-                        
+
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               vertical: 8, horizontal: 16),
                           elevation: 4,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(
+                            side: const BorderSide(
                                 color: Color.fromARGB(255, 111, 6, 120)),
                           ),
                           child: Padding(
@@ -192,8 +201,10 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 if (gift.imageUrl != null)
-                                  Image.asset(gift.imageUrl!,
-                                    height: 180,width: 180,
+                                  Image.memory(
+    base64Decode(gift.imageUrl!),
+                                    height: 180,
+                                    width: 180,
                                     fit: BoxFit.cover,
                                   ),
                                 const Divider(height: 20, color: Colors.grey),
@@ -203,17 +214,16 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                     children: [
                                       if (gift.status != 'pledged')
                                         IconButton(
-                                          icon: Icon(Icons.edit,
+                                          icon: const Icon(Icons.edit,
                                               color: Colors.blue),
                                           onPressed: () {
-                                             print('giftId:### ${gift.giftId}');
                                             Navigator.pushNamed(
                                               context,
                                               '/myGiftDetails',
-                                              arguments: 
-                                                {'gift': gift}
-                                              ,
-                                            );
+                                              arguments: {'gift': gift},
+                                            ).then((_) {
+                                              _refreshGiftList();
+                                            });
                                           },
                                         ),
                                       if (gift.status != 'pledged')
@@ -226,19 +236,20 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                               context: context,
                                               builder: (context) =>
                                                   AlertDialog(
-                                                title:
-                                                    const Text('Delete Gift'),
+                                                title: const Text('Delete Gift'),
                                                 content: const Text(
                                                     'Are you sure you want to delete this Gift?'),
                                                 actions: [
                                                   TextButton(
-                                                    child: const Text('Cancel'),
+                                                    child:
+                                                        const Text('Cancel'),
                                                     onPressed: () =>
                                                         Navigator.pop(
                                                             context, false),
                                                   ),
                                                   TextButton(
-                                                    child: const Text('Delete'),
+                                                    child:
+                                                        const Text('Delete'),
                                                     onPressed: () =>
                                                         Navigator.pop(
                                                             context, true),
@@ -250,9 +261,10 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                                             if (confirm == true) {
                                               await giftController
                                                   .deleteGift(gift.giftId);
+                                              _refreshGiftList();
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
-                                                SnackBar(
+                                                const SnackBar(
                                                     content: Text(
                                                         'Gift deleted Successfully.')),
                                               );
@@ -276,9 +288,11 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                   context,
                   '/addGift',
                   arguments: {'eventId': widget.eventId},
-                );
+                ).then((_) {
+                  _refreshGiftList();
+                });
               },
-              child: Icon(Icons.add),
+              child: const Icon(Icons.add),
             )
           : null,
     );

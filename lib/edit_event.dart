@@ -98,7 +98,7 @@ class EditEvent extends StatelessWidget {
                             ),
                             builder: (context, child) {
                               return MediaQuery(
-                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
                                 child: child!,
                               );
                             },

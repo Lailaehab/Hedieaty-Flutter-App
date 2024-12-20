@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hedieaty/controllers/gift_controller.dart';
 import 'package:hedieaty/services/database.dart';
 import '/models/event.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +9,6 @@ class EventController {
 
   Future<void> saveEvent(Event event) async {
     try {
-      // await _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
       print("########### Editing the Database table Events##########");
       await _databaseHelper.updateEvent(event);
       if(event.published == 'true'){
@@ -69,39 +67,6 @@ class EventController {
       print('Error deleting event and its gifts: $e');
     }
   }
-
-    // try {
-    //   await _firestore.collection('events').doc(eventId).delete();
-    // } catch (e) {
-    //   print('Error deleting event: $e');
-    // }
-    // await _databaseHelper.deleteEvent(eventId);
-  
-
-  //   String getEventStatus(Timestamp eventDate,Event event) {
-  //   final DateTime eventDateTime = eventDate.toDate();
-  //   final DateTime now = DateTime.now();
-
-  //   final DateTime eventDateOnly = DateTime(eventDateTime.year, eventDateTime.month, eventDateTime.day);
-  //   final DateTime nowDateOnly = DateTime(now.year, now.month, now.day);
-
-  //   if (eventDateOnly.isBefore(nowDateOnly)) {
-  //     event.status='Past';
-  //     _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
-  //     return 'Past';
-  //   } else if (eventDateOnly.isAtSameMomentAs(nowDateOnly)) {
-  //     event.status='Current';
-  //     _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
-  //     return 'Current';
-  //   } else if (eventDateOnly.isAfter(nowDateOnly)) {
-  //     event.status='Upcoming';
-  //     _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
-  //     return 'Upcoming';
-  //   }
-  //   event.status='Unknown';
-  //   _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
-  //   return 'Unknown';
-  // }
 
     String getEventStatus(Timestamp eventDate,Event event) {
         final DateTime now = DateTime.now();

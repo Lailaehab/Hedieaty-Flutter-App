@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../controllers/event_controller.dart';
-import '../models/event.dart';
 import '../controllers/authentication_controller.dart';
 import 'package:intl/intl.dart';
 import 'services/database.dart';
@@ -90,7 +86,7 @@ class CreateEvent extends StatelessWidget {
                             initialTime: TimeOfDay.now(),
                             builder: (context, child) {
                               return MediaQuery(
-                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
                                 child: child!,
                               );
                             },
@@ -104,7 +100,7 @@ class CreateEvent extends StatelessWidget {
                               selectedTime.hour,
                               selectedTime.minute,
                             );
-                            _timeController.text = DateFormat('HH:mm').format(time); // Format in 24-hour format
+                            _timeController.text = DateFormat('HH:mm').format(time); 
                           }
                         },
                       ),

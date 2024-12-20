@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/gift.dart';
 import '../controllers/gift_controller.dart';
 import '../reusable/image_utils.dart';
@@ -21,7 +23,7 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
   TextEditingController categoryController = TextEditingController();
   TextEditingController priceController = TextEditingController();
 
-  String? updatedImageUrl; // Stores the updated image URL for saving later
+  String? compressedImageBase64;
 
   @override
   void initState() {
@@ -34,54 +36,41 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
     descriptionController.text = widget.gift.description;
     categoryController.text = widget.gift.category;
     priceController.text = widget.gift.price.toString();
-    updatedImageUrl = widget.gift.imageUrl ;
+    compressedImageBase64 = widget.gift.imageUrl;
   }
 
-  Future<void> _pickImageFromAssets() async {
-    String? selectedImage = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Select Gift Image"),
-          content: SingleChildScrollView(
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: ImageUtils.availableImages.map((imagePath) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop(imagePath);
-                  },
-                  child: Image.asset(
-                    imagePath,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }).toList(),
-            ),
+  Future<void> requestPermissions() async {
+    final status = await Permission.camera.request();
+    if (status.isDenied || status.isPermanentlyDenied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Camera permission is required to select an image. Please enable it in settings.',
           ),
-        );
-      },
-    );
+        ),
+      );
+    } else if (status.isGranted) {
+      await _pickAndCompressImage();
+    }
+  }
 
-    if (selectedImage != null) {
+  Future<void> _pickAndCompressImage() async {
+    final compressedImage = await ImageUtils.pickAndCompressImage();
+    if (compressedImage != null) {
       setState(() {
-        updatedImageUrl = selectedImage; // Store the selected image in updatedImageUrl
+        compressedImageBase64 = compressedImage;
       });
     }
   }
 
-  Future<void> _removeImage() async {
+  void _removeImage() {
     setState(() {
-      updatedImageUrl = null; // Reset image locally for saving later
+      compressedImageBase64 = null;
     });
   }
 
   Future<void> _updateGift() async {
     if (_formKey.currentState!.validate()) {
-      // Create an updated Gift object
       final updatedGift = Gift(
         giftId: widget.gift.giftId,
         eventId: widget.gift.eventId,
@@ -91,7 +80,7 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
         category: categoryController.text,
         price: double.parse(priceController.text),
         status: widget.gift.status,
-        imageUrl: updatedImageUrl,
+        imageUrl: compressedImageBase64,
       );
 
       try {
@@ -99,14 +88,12 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gift updated successfully!')),
         );
-
         await Future.delayed(const Duration(seconds: 1));
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to update gift.')),
         );
-        print("Error updating gift: $e");
       }
     }
   }
@@ -128,11 +115,14 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
           children: const [
             Icon(Icons.edit, color: Color.fromARGB(255, 111, 6, 120), size: 30),
             SizedBox(width: 8),
-            Text('Edit Gift Details',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 111, 6, 120))),
+            Text(
+              'Edit Gift Details',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 111, 6, 120),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.white,
@@ -150,7 +140,9 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                   elevation: 4,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
-                    side: const BorderSide(color: Color.fromARGB(255, 111, 6, 120)),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 111, 6, 120),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -158,7 +150,8 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                       children: [
                         TextFormField(
                           controller: nameController,
-                          decoration: const InputDecoration(labelText: 'Gift Name'),
+                          decoration:
+                              const InputDecoration(labelText: 'Gift Name'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a gift name';
@@ -169,7 +162,8 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: descriptionController,
-                          decoration: const InputDecoration(labelText: 'Description'),
+                          decoration:
+                              const InputDecoration(labelText: 'Description'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a description';
@@ -180,7 +174,8 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: categoryController,
-                          decoration: const InputDecoration(labelText: 'Category'),
+                          decoration:
+                              const InputDecoration(labelText: 'Category'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a category';
@@ -197,9 +192,6 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a price';
                             }
-                            if (double.tryParse(value) == null) {
-                              return 'Please enter a valid price';
-                            }
                             return null;
                           },
                         ),
@@ -207,65 +199,93 @@ class _MyGiftDetailsPageState extends State<MyGiftDetailsPage> {
                     ),
                   ),
                 ),
-                                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Center(
-                  child: updatedImageUrl != null
-                      ? Image.asset(updatedImageUrl!, height: 150, fit: BoxFit.cover)
+                  child: compressedImageBase64 != null
+                      ? Column(
+                          children: [
+                            const Text(
+                              'Image Selected and Compressed',
+                              style: TextStyle(color: Colors.green),
+                            ),
+                            const SizedBox(height: 10),
+                            Image.memory(
+                              base64Decode(compressedImageBase64!),
+                              width: 200,
+                              height: 150,
+                              fit: BoxFit.cover,
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: _removeImage,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color.fromARGB(255, 0, 79, 170),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Remove Image',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
+                            ),
+                          ],
+                        )
                       : Container(
                           width: 200,
-                          height: 200,
+                          height: 150,
                           color: Colors.grey[200],
-                          child: Icon(Icons.image, color: Colors.grey),
+                          child: const Icon(Icons.image, color: Colors.grey),
                         ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _pickImageFromAssets,
-                      icon: Icon(Icons.upload, color: Colors.white),
-                      label: Text('Select Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        backgroundColor: Color.fromARGB(255, 111, 6, 120),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    ElevatedButton.icon(
-                      onPressed: _removeImage,
-                      icon: Icon(Icons.delete, color: Colors.white),
-                      label: Text('Remove Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        backgroundColor: const Color.fromARGB(255, 0, 79, 170),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 20),
                 Center(
-                child:ElevatedButton(
-                  onPressed: _updateGift,
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(fontSize: 22, color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    backgroundColor: const Color.fromARGB(255, 111, 6, 120),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                  child: ElevatedButton.icon(
+                    onPressed: requestPermissions,
+                    icon: const Icon(Icons.image, color: Colors.white),
+                    label: const Text(
+                      'Select Image',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 16),
+                      textStyle: const TextStyle(fontSize: 25),
+                      backgroundColor: const Color.fromARGB(255, 111, 6, 120),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _updateGift,
+                    child: const Text(
+                      'Save Changes',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 16),
+                      textStyle: const TextStyle(fontSize: 25),
+                      backgroundColor: const Color.fromARGB(255, 111, 6, 120),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

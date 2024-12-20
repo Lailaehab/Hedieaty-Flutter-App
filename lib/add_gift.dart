@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-import '../models/gift.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../controllers/gift_controller.dart';
 import '../controllers/authentication_controller.dart';
 import '../reusable/image_utils.dart';
@@ -23,48 +23,37 @@ class _AddGiftPageState extends State<AddGiftPage> {
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  String? selectedImagePath; 
+  String? selectedImagePath;
+  String? compressedImageBase64;
 
-  Future<void> _pickImageFromAssets() async {
-    String? selectedImage = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Select Gift Image"),
-          content: SingleChildScrollView(
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: ImageUtils.availableImages.map((imagePath) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop(imagePath);
-                  },
-                  child: Image.asset(
-                    imagePath,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }).toList(),
-            ),
+  Future<void> requestPermissions() async {
+    final status = await Permission.camera.request();
+    if (status.isDenied || status.isPermanentlyDenied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Camera permission is required to select an image. Please enable it in settings.',
           ),
-        );
-      },
-    );
+        ),
+      );
+    } else if (status.isGranted) {
+      await _pickAndCompressImage();
+    }
+  }
 
-    if (selectedImage != null) {
+  Future<void> _pickAndCompressImage() async {
+    final compressedImage = await ImageUtils.pickAndCompressImage();
+    if (compressedImage != null) {
       setState(() {
-        selectedImagePath = selectedImage;
+        compressedImageBase64 = compressedImage;
       });
     }
   }
 
-  // Function to remove the selected image
   void _removeImage() {
     setState(() {
-      selectedImagePath = null; // Reset image selection
+      selectedImagePath = null; 
+      compressedImageBase64 = null; 
     });
   }
 
@@ -130,8 +119,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                         controller: categoryController,
                         decoration: InputDecoration(
                           labelText: 'Category',
-                          border: OutlineInputBorder(),
-                        ),
+                          border: OutlineInputBorder()),
                       ),
                       SizedBox(height: 16),
                       TextField(
@@ -148,16 +136,25 @@ class _AddGiftPageState extends State<AddGiftPage> {
               ),
               SizedBox(height: 20),
               Center(
-                child: selectedImagePath != null
+                child: compressedImageBase64 != null
                     ? Column(
                         children: [
-                          Image.asset(selectedImagePath!,
-                              height: 150, fit: BoxFit.cover),
+                          Text(
+                            'Image Selected and Compressed',
+                            style: TextStyle(color: Colors.green),
+                          ),
+                          SizedBox(height: 10),
+                          Image.memory(
+                            base64Decode(compressedImageBase64!),
+                            width: 200,
+                            height: 150,
+                            fit: BoxFit.cover,
+                          ),
                           SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: _removeImage,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:  Color.fromARGB(255, 0, 79, 170), 
+                              backgroundColor: Color.fromARGB(255, 0, 79, 170),
                               padding: EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 20),
                               shape: RoundedRectangleBorder(
@@ -182,7 +179,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton.icon(
-                  onPressed: _pickImageFromAssets,
+                  onPressed: requestPermissions,
                   icon: Icon(Icons.image, color: Colors.white),
                   label: Text(
                     'Select Image',
@@ -192,8 +189,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                         fontSize: 22),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     textStyle: TextStyle(fontSize: 25),
                     backgroundColor: Color.fromARGB(255, 111, 6, 120),
                     shape: RoundedRectangleBorder(
@@ -207,13 +203,14 @@ class _AddGiftPageState extends State<AddGiftPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (nameController.text.isEmpty ||
-        descriptionController.text.isEmpty ||
-        categoryController.text.isEmpty ||
-        priceController.text.isEmpty)  {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields.')),
-      );
-      return;}
+                        descriptionController.text.isEmpty ||
+                        categoryController.text.isEmpty ||
+                        priceController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all fields.')),
+                      );
+                      return;
+                    }
                     final newGift = {
                       'eventId': widget.eventId,
                       'name': nameController.text,
@@ -222,7 +219,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                       'price': double.tryParse(priceController.text) ?? 0.0,
                       'status': 'available',
                       'ownerId': userId,
-                      'imageUrl': selectedImagePath,
+                      'imageUrl': compressedImageBase64,
                     };
                     giftController.createGift(newGift);
                     Navigator.pop(context);
@@ -235,8 +232,7 @@ class _AddGiftPageState extends State<AddGiftPage> {
                         fontSize: 25),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     textStyle: TextStyle(fontSize: 25),
                     backgroundColor: Color.fromARGB(255, 111, 6, 120),
                     shape: RoundedRectangleBorder(

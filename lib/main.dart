@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hedieaty/firebase_api.dart';
 import 'package:hedieaty/services/user_manager.dart';
 import 'home_page.dart';
 import 'my_event_list.dart';
@@ -12,15 +11,12 @@ import 'create_event.dart';
 import 'my_pledged_gifts.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'signup.dart';
 import 'add_gift.dart';
 import 'edit_event.dart';
 import 'models/event.dart';
 import 'models/gift.dart';
 import 'login.dart';
-import 'controllers/syncing_controller.dart';
-import 'controllers/authentication_controller.dart';
 import './services/global_notifications.dart';
 final GlobalKey <NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

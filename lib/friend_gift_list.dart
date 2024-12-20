@@ -3,6 +3,7 @@ import '/controllers/gift_controller.dart';
 import '/models/gift.dart';
 import '/reusable/sorting_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
 
 class FriendGiftListPage extends StatefulWidget {
   final String eventId;
@@ -145,8 +146,8 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                       ),
                       const SizedBox(height: 8),
                       if (gift.imageUrl != null)
-                        Image.asset(
-                          gift.imageUrl!,
+                        Image.memory(
+    base64Decode(gift.imageUrl!)!,
                           height: 180,width: 180,
                           fit: BoxFit.cover,
                         ),
